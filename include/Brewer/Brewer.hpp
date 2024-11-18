@@ -17,4 +17,18 @@ namespace Brewer
     class Module;
     class Builder;
     class Parser;
+
+    class Type;
+    class VoidType;
+    class IntType;
+    class FloatType;
+    class PointerType;
+    class ArrayType;
+    class StructType;
+    class FunctionType;
+
+    class Value;
+    class Constant;
+    class GlobalValue;
+    class Function;
 }
