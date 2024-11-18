@@ -1,3 +1,4 @@
+#include <istream>
 #include <Brewer/Parser.hpp>
 
 int Brewer::Parser::Get()

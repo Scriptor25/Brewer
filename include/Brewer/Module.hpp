@@ -11,6 +11,8 @@ namespace Brewer
     public:
         explicit Module(Context& context);
 
+        [[nodiscard]] Context& GetContext() const;
+
         GlobalValue* GetSymbol(const std::string& name);
         GlobalValue* AddSymbol(const std::string& name, GlobalValue* value);
 

@@ -2,4 +2,6 @@
 
 void Brewer::Parser::ParseGlobal()
 {
+    if (At("define") || At("declare"))
+        return ParseFunction();
 }
