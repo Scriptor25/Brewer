@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Brewer/Value/Value.hpp>
+#include <Brewer/Value/NamedValue.hpp>
 
 namespace Brewer
 {
-    class Argument : public Value
+    class Argument : public NamedValue
     {
     public:
         Argument(Type* type, std::string name, unsigned index);

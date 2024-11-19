@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <sstream>
 #include <string>
 
 namespace Brewer
@@ -10,7 +11,7 @@ namespace Brewer
     template <typename... Args>
     [[noreturn]] void Error(const std::string& format, Args... args)
     {
-        Error(std::format(format, std::make_format_args(args...)));
+        Error(std::vformat(format, std::make_format_args(args...)));
     }
 
     class Context;
@@ -20,6 +21,7 @@ namespace Brewer
 
     class Type;
     class VoidType;
+    class BlockType;
     class IntType;
     class FloatType;
     class PointerType;
@@ -28,7 +30,20 @@ namespace Brewer
     class FunctionType;
 
     class Value;
+
     class Constant;
+    class ConstantInt;
+    class ConstantFloat;
+    class ConstantArray;
+    class ConstantStruct;
+
+    class NamedValue;
     class GlobalValue;
+    class GlobalVariable;
     class Function;
+
+    class Argument;
+    class Block;
+
+    class Instruction;
 }

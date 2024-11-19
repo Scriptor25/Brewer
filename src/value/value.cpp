@@ -1,27 +1,39 @@
-#include <utility>
 #include <Brewer/Value/Value.hpp>
 
-Brewer::Value::Value(Type* type, std::string name)
-    : m_Type(type), m_Name(std::move(name))
+Brewer::Value::Value(Type* type)
+    : m_Type(type)
 {
 }
 
-Brewer::Value* Brewer::Value::GetPrevious() const
+Brewer::Type* Brewer::Value::GetType() const
 {
-    return m_Previous;
+    return m_Type;
 }
 
-Brewer::Value* Brewer::Value::GetNext() const
+std::ostream& Brewer::Value::PrintUseList(std::ostream& os) const
 {
-    return m_Next;
+    if (m_UseList.empty())
+        return os << "; no uses";
+    os << "; ";
+    for (unsigned i = 0; i < m_UseList.size(); ++i)
+    {
+        if (i > 0) os << ", ";
+        m_UseList[i]->PrintOperand(os);
+    }
+    return os;
 }
 
-void Brewer::Value::SetPrevious(Value* value)
+void Brewer::Value::AddUse(Value* use)
 {
-    m_Previous = value;
+    m_UseList.push_back(use);
 }
 
-void Brewer::Value::SetNext(Value* value)
+void Brewer::Value::ReplaceAllUses(Value* new_value)
 {
-    m_Next = value;
+    for (const auto& use : m_UseList)
+    {
+        use->ReplaceUseOf(this, new_value);
+        new_value->AddUse(use);
+    }
+    delete this;
 }

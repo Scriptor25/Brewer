@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Brewer/Value/Value.hpp>
+#include <Brewer/Value/NamedValue.hpp>
 
 namespace Brewer
 {
-    class GlobalValue : public Value
+    class GlobalValue : public NamedValue
     {
     public:
         enum LinkageType
@@ -16,11 +16,11 @@ namespace Brewer
             /**
              * resolved by linker across all modules
              */
-            ExternalLinkage,
+            ExternLinkage,
             /**
              * local to its declaring module
              */
-            InternalLinkage,
+            InternLinkage,
             /**
              * overridden by strong symbols, if present
              */
@@ -36,5 +36,18 @@ namespace Brewer
         };
 
         GlobalValue(Type* element_type, std::string name, LinkageType linkage);
+
+        std::ostream& Print(std::ostream& os) const override;
+        std::ostream& PrintOperand(std::ostream& os) const override;
+
+        [[nodiscard]] LinkageType GetLinkage() const;
+
+    private:
+        LinkageType m_Linkage;
     };
+
+    GlobalValue::LinkageType ToLinkage(const std::string& name);
+    std::string ToString(GlobalValue::LinkageType linkage);
+
+    std::ostream& operator<<(std::ostream& os, GlobalValue::LinkageType linkage);
 }

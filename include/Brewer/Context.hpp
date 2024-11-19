@@ -2,7 +2,7 @@
 
 #include <map>
 #include <vector>
-#include <Brewer/Type.hpp>
+#include <Brewer/Brewer.hpp>
 
 namespace Brewer
 {
@@ -10,6 +10,12 @@ namespace Brewer
     {
     public:
         Context() = default;
+
+        VoidType* GetVoidType();
+        BlockType* GetBlockType();
+
+        IntType* GetIntNType(unsigned bits);
+        FloatType* GetFloatNType(unsigned bits);
 
         PointerType* GetPointerType(Type* element_type);
         ArrayType* GetArrayType(Type* element_type, unsigned size);
@@ -23,7 +29,7 @@ namespace Brewer
             const unsigned hash = T::Hash(args...);
             auto& type = m_TypeMap[hash];
             if (type) return dynamic_cast<T*>(type);
-            return dynamic_cast<T*>(type = new T(hash, args...));
+            return dynamic_cast<T*>(type = new T(*this, hash, args...));
         }
 
         std::map<unsigned, Type*> m_TypeMap;

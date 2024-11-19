@@ -1,24 +1,17 @@
 #include <vector>
+#include <Brewer/Context.hpp>
+#include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Value/Argument.hpp>
+#include <Brewer/Value/Function.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
+#include <Brewer/Value/Instruction.hpp>
 
-/**
- * <define|declare> [<linkage>] @<name>(<arg>...) [{...}]
- */
-void Brewer::Parser::ParseFunction()
+Brewer::Function* Brewer::Parser::ParseFunction()
 {
     const auto define = NextAt("define");
     if (!define) Expect("declare");
-
-    GlobalValue::LinkageType linkage = GlobalValue::ExternalLinkage;
-    if (NextAt("none")) linkage = GlobalValue::NoLinkage;
-    else if (NextAt("external")) linkage = GlobalValue::ExternalLinkage;
-    else if (NextAt("internal")) linkage = GlobalValue::InternalLinkage;
-    else if (NextAt("weak")) linkage = GlobalValue::WeakLinkage;
-    else if (NextAt("common")) linkage = GlobalValue::CommonLinkage;
-    else if (NextAt("tentative")) linkage = GlobalValue::TentativeLinkage;
-
+    const auto linkage = ToLinkage(Expect(IdToken).Value);
     const auto result_type = ParseType();
     const auto name = Expect(GlobalToken).Value;
 
@@ -47,11 +40,19 @@ void Brewer::Parser::ParseFunction()
     }
     Expect(")");
 
+    const auto function_type = m_Dest.GetContext().GetFunctionType(result_type, arg_types, vararg);
+    const auto function = new Function(function_type, name, linkage, args);
+    m_Dest.SetGlobalValue(name, function);
+    m_Parent = function;
+
     if (define)
     {
         Expect("{");
         while (!At("}") && !AtEof())
-            NextToken();
+            function->Append(ParseNamedValue());
         Expect("}");
     }
+
+    m_Parent = {};
+    return function;
 }

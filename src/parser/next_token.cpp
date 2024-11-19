@@ -32,11 +32,13 @@ Brewer::Token& Brewer::Parser::NextToken()
         IdState,
         IntState,
         FloatState,
+        StringState,
     };
 
     auto state = NoState;
     int base = 0;
     std::string value;
+    TokenType type;
 
     while (m_Tok >= 0)
     {
@@ -47,6 +49,18 @@ Brewer::Token& Brewer::Parser::NextToken()
             {
             case ';':
                 state = CommentState;
+                break;
+
+            case '@':
+                state = IdState;
+                type = GlobalToken;
+                Get();
+                break;
+
+            case '%':
+                state = IdState;
+                type = LocalToken;
+                Get();
                 break;
 
             case '0':
@@ -81,6 +95,25 @@ Brewer::Token& Brewer::Parser::NextToken()
                 }
                 break;
 
+            case '"':
+                state = StringState;
+                Get();
+                break;
+
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case ',':
+            case '.':
+            case ':':
+            case '=':
+                value += static_cast<char>(m_Tok);
+                Get();
+                return m_Token = {OtherToken, value};
+
             default:
                 if (is_digit(m_Tok, 10))
                 {
@@ -91,6 +124,7 @@ Brewer::Token& Brewer::Parser::NextToken()
                 if (is_id(m_Tok))
                 {
                     state = IdState;
+                    type = IdToken;
                     break;
                 }
                 Get();
@@ -106,7 +140,7 @@ Brewer::Token& Brewer::Parser::NextToken()
 
         case IdState:
             if (!is_id(m_Tok))
-                return m_Token = {IdToken, value};
+                return m_Token = {type, value};
             value += static_cast<char>(m_Tok);
             Get();
             break;
@@ -138,6 +172,23 @@ Brewer::Token& Brewer::Parser::NextToken()
             }
             if (!is_digit(m_Tok, 10))
                 return m_Token = {FloatToken, value, 0, std::stod(value)};
+            value += static_cast<char>(m_Tok);
+            Get();
+            break;
+
+        case StringState:
+            if (m_Tok == '"')
+            {
+                Get();
+                return m_Token = {StringToken, value};
+            }
+            if (m_Tok == '\\')
+            {
+                std::string val;
+                val += static_cast<char>(Get());
+                val += static_cast<char>(Get());
+                m_Tok = std::stoi(val, nullptr, 16);
+            }
             value += static_cast<char>(m_Tok);
             Get();
             break;

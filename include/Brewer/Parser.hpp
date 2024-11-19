@@ -13,6 +13,8 @@ namespace Brewer
         LocalToken,
         IntToken,
         FloatToken,
+        StringToken,
+        OtherToken,
     };
 
     struct Token
@@ -48,11 +50,17 @@ namespace Brewer
 
         Type* ParseType();
 
-        void ParseGlobal();
-        void ParseFunction();
+        GlobalVariable* ParseGlobal();
+        Function* ParseFunction();
+
+        NamedValue* ParseNamedValue();
+        Instruction* ParseInstruction(Type* type, const std::string& name);
+        Value* ParseOperand();
+        Constant* ParseConstant(Type* type);
 
         std::istream& m_Stream;
         Module& m_Dest;
+        Function* m_Parent{};
 
         int m_Tok;
         Token m_Token;

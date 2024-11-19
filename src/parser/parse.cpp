@@ -3,6 +3,17 @@
 void Brewer::Parser::Parse(std::istream& stream, Module& dest)
 {
     Parser parser(stream, dest);
-    while (!parser.At(EofToken))
-        parser.ParseGlobal();
+    while (!parser.AtEof())
+    {
+        if (parser.At("global"))
+        {
+            parser.ParseGlobal();
+            continue;
+        }
+        if (parser.At("define") || parser.At("declare"))
+        {
+            parser.ParseFunction();
+            continue;
+        }
+    }
 }

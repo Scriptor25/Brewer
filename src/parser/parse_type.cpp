@@ -2,6 +2,7 @@
 #include <Brewer/Context.hpp>
 #include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
+#include <Brewer/Type.hpp>
 
 Brewer::Type* Brewer::Parser::ParseType()
 {
@@ -32,9 +33,22 @@ Brewer::Type* Brewer::Parser::ParseType()
 
         result_type = m_Dest.GetContext().GetStructType(element_types);
     }
-    else
+    else if (At(IdToken))
+    {
+        const auto name = Skip().Value;
+        if (name.front() == 'i')
+        {
+            const auto bits = std::stoi(name.substr(1));
+            result_type = m_Dest.GetContext().GetIntNType(bits);
+        }
+        else if (name.front() == 'f')
+        {
+            const auto bits = std::stoi(name.substr(1));
+            result_type = m_Dest.GetContext().GetFloatNType(bits);
+        }
+    }
 
-        if (!result_type) Error("expected a type");
+    if (!result_type) Error("expected type");
 
     while (NextAt("("))
     {

@@ -13,8 +13,10 @@ namespace Brewer
 
         [[nodiscard]] Context& GetContext() const;
 
-        GlobalValue* GetSymbol(const std::string& name);
-        GlobalValue* AddSymbol(const std::string& name, GlobalValue* value);
+        std::ostream& Print(std::ostream& os) const;
+
+        GlobalValue* GetGlobalValue(Type* type, const std::string& name);
+        GlobalValue* SetGlobalValue(const std::string& name, GlobalValue* value);
 
     private:
         Context& m_Context;
