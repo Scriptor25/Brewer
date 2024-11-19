@@ -37,3 +37,46 @@ void Brewer::Value::ReplaceAllUses(Value* new_value)
     }
     delete this;
 }
+
+void Brewer::Value::ReplaceUseOf(Value* old_value, Value* new_value)
+{
+    Error("this does not use anything");
+}
+
+void Brewer::Value::InsertBefore(Value* value)
+{
+    if (m_Previous) m_Previous->m_Next = m_Next;
+    if (m_Next) m_Next->m_Previous = m_Previous;
+
+    m_Previous = value->m_Previous;
+    m_Previous->m_Next = this;
+    value->m_Previous = this;
+    m_Next = value;
+}
+
+void Brewer::Value::InsertAfter(Value* value)
+{
+    if (m_Previous) m_Previous->m_Next = m_Next;
+    if (m_Next) m_Next->m_Previous = m_Previous;
+
+    m_Next = value->m_Next;
+    m_Next->m_Previous = this;
+    value->m_Next = this;
+    m_Previous = value;
+}
+
+void Brewer::Value::PrependBefore(Value* value)
+{
+    Value* ptr = value;
+    while (ptr->m_Previous)
+        ptr = ptr->m_Previous;
+    InsertBefore(ptr);
+}
+
+void Brewer::Value::AppendAfter(Value* value)
+{
+    Value* ptr = value;
+    while (ptr->m_Next)
+        ptr = ptr->m_Next;
+    InsertAfter(ptr);
+}
