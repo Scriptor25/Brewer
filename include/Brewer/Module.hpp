@@ -1,7 +1,8 @@
 #pragma once
 
-#include <map>
+#include <functional>
 #include <string>
+#include <vector>
 #include <Brewer/Brewer.hpp>
 
 namespace Brewer
@@ -13,13 +14,17 @@ namespace Brewer
 
         [[nodiscard]] Context& GetContext() const;
 
-        std::ostream& Print(std::ostream& os) const;
+        void Print(Printer* printer);
+        std::ostream& PrintIR(std::ostream& os) const;
 
         GlobalValue* GetGlobalValue(Type* type, const std::string& name);
-        GlobalValue* SetGlobalValue(const std::string& name, GlobalValue* value);
+        void SetGlobalValue(const std::string& name, GlobalValue* new_value);
+
+        void ForEach(const std::function<void(GlobalValue*)>& consumer) const;
 
     private:
         Context& m_Context;
-        std::map<std::string, GlobalValue*> m_SymbolTable;
+
+        std::vector<GlobalValue*> m_SymbolTable;
     };
 }

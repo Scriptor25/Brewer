@@ -8,7 +8,12 @@ Brewer::GlobalVariable::GlobalVariable(Type* type, std::string name, const Linka
 {
 }
 
-std::ostream& Brewer::GlobalVariable::Print(std::ostream& os) const
+std::ostream& Brewer::GlobalVariable::PrintIR(std::ostream& os) const
 {
-    return m_Initializer->PrintOperand(os << "global " << GetLinkage() << " @" << GetName() << " = ");
+    return m_Initializer->PrintIROperand(os << "global " << GetLinkage() << " @" << GetName() << " = ");
+}
+
+Brewer::Constant* Brewer::GlobalVariable::GetInitializer() const
+{
+    return m_Initializer;
 }

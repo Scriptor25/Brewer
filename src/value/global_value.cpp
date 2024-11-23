@@ -8,12 +8,12 @@ Brewer::GlobalValue::GlobalValue(Type* element_type, std::string name, const Lin
 {
 }
 
-std::ostream& Brewer::GlobalValue::Print(std::ostream& os) const
+std::ostream& Brewer::GlobalValue::PrintIR(std::ostream& os) const
 {
-    return PrintOperand(os);
+    return PrintIROperand(os);
 }
 
-std::ostream& Brewer::GlobalValue::PrintOperand(std::ostream& os) const
+std::ostream& Brewer::GlobalValue::PrintIROperand(std::ostream& os) const
 {
     return GetType()->Print(os) << " @" << GetName();
 }

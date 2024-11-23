@@ -54,7 +54,7 @@ namespace Brewer
         Function* ParseFunction();
 
         NamedValue* ParseNamedValue();
-        Instruction* ParseInstruction(Type* type, const std::string& name);
+        Instruction* ParseInstruction(Type* type, const std::string& name, const std::string& code_name);
         Value* ParseOperand();
         Constant* ParseConstant(Type* type);
 

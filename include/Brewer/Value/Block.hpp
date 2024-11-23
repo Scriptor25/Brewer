@@ -9,13 +9,14 @@ namespace Brewer
     public:
         Block(BlockType* type, std::string name);
 
-        std::ostream& Print(std::ostream& os) const override;
-        std::ostream& PrintOperand(std::ostream& os) const override;
+        std::ostream& PrintIR(std::ostream& os) const override;
+        std::ostream& PrintIROperand(std::ostream& os) const override;
 
-        void ReplaceUseOf(Value* old_value, Value* new_value) override;
-
-        NamedValue* GetValue(const Type* type, const std::string& name);
+        NamedValue* GetValue(Type* type, const std::string& name) const;
         void Append(Value* value);
+
+        [[nodiscard]] Value* GetValue(unsigned i) const;
+        [[nodiscard]] unsigned GetNumValues() const;
 
     private:
         std::vector<Value*> m_Values;

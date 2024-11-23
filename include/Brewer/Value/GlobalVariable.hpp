@@ -9,7 +9,9 @@ namespace Brewer
     public:
         GlobalVariable(Type* type, std::string name, LinkageType linkage, Constant* initializer);
 
-        std::ostream& Print(std::ostream& os) const override;
+        std::ostream& PrintIR(std::ostream& os) const override;
+
+        [[nodiscard]] Constant* GetInitializer() const;
 
     private:
         Constant* m_Initializer;

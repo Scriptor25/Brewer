@@ -37,8 +37,8 @@ namespace Brewer
 
         GlobalValue(Type* element_type, std::string name, LinkageType linkage);
 
-        std::ostream& Print(std::ostream& os) const override;
-        std::ostream& PrintOperand(std::ostream& os) const override;
+        std::ostream& PrintIR(std::ostream& os) const override;
+        std::ostream& PrintIROperand(std::ostream& os) const override;
 
         [[nodiscard]] LinkageType GetLinkage() const;
 

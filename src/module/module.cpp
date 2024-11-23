@@ -1,5 +1,6 @@
 #include <Brewer/Module.hpp>
 #include <Brewer/Type.hpp>
+#include <Brewer/Printer/Printer.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
 Brewer::Module::Module(Context& context)
@@ -12,36 +13,48 @@ Brewer::Context& Brewer::Module::GetContext() const
     return m_Context;
 }
 
-std::ostream& Brewer::Module::Print(std::ostream& os) const
+void Brewer::Module::Print(Printer* printer)
+{
+    printer->Print(this);
+}
+
+std::ostream& Brewer::Module::PrintIR(std::ostream& os) const
 {
     bool first = true;
-    for (const auto& [name, global] : m_SymbolTable)
+    for (const auto& global : m_SymbolTable)
     {
         if (first)
             first = false;
         else os << std::endl;
-        global->Print(os) << std::endl;
+        global->PrintIR(os) << std::endl;
     }
     return os;
 }
 
 Brewer::GlobalValue* Brewer::Module::GetGlobalValue(Type* type, const std::string& name)
 {
-    auto& global = m_SymbolTable[name];
-    if (global)
-    {
-        if (global->GetType() != type)
-            Error("type mismatch: {} != {}", global->GetType(), type);
+    if (const auto global = Find(m_SymbolTable, type, name))
         return global;
-    }
-    const auto pointer_type = dynamic_cast<PointerType*>(type);
-    const auto element_type = pointer_type->ElementType();
-    return global = new GlobalValue(element_type, name, GlobalValue::NoLinkage);
+
+    const auto global = new GlobalValue(dynamic_cast<PointerType*>(type)->ElementType(), name, GlobalValue::NoLinkage);
+    m_SymbolTable.push_back(global);
+    return global;
 }
 
-Brewer::GlobalValue* Brewer::Module::SetGlobalValue(const std::string& name, GlobalValue* value)
+void Brewer::Module::SetGlobalValue(const std::string& name, GlobalValue* new_value)
 {
-    auto& global = m_SymbolTable[name];
-    if (global) global->ReplaceAllUses(value);
-    return global = value;
+    if (const auto old_value = Find(m_SymbolTable, name))
+    {
+        Replace(m_SymbolTable, old_value, new_value);
+        old_value->ReplaceAllUses(new_value);
+        return;
+    }
+
+    m_SymbolTable.push_back(new_value);
+}
+
+void Brewer::Module::ForEach(const std::function<void(GlobalValue*)>& consumer) const
+{
+    for (const auto& global : m_SymbolTable)
+        consumer(global);
 }

@@ -100,7 +100,13 @@ namespace Brewer
 
         std::ostream& Print(std::ostream& os) const override;
 
-        [[nodiscard]] Type* ElementType() const;
+        template <typename T = Type>
+        [[nodiscard]] T* GetElementType() const
+        {
+            if (!this) return {};
+            return dynamic_cast<T*>(m_ElementType);
+        }
+
         [[nodiscard]] unsigned Size() const;
 
     private:
@@ -141,11 +147,14 @@ namespace Brewer
     };
 }
 
-template <>
-struct std::formatter<Brewer::Type*> : formatter<string>
+template <typename T>
+concept DerivedType = std::is_base_of_v<Brewer::Type, T>;
+
+template <DerivedType T>
+struct std::formatter<T*> : formatter<string>
 {
     template <typename FormatContext>
-    auto format(Brewer::Type* type, FormatContext& ctx) const
+    auto format(T* type, FormatContext& ctx) const
     {
         stringstream os;
         type->Print(os);

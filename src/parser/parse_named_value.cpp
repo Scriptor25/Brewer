@@ -6,19 +6,19 @@
 
 Brewer::NamedValue* Brewer::Parser::ParseNamedValue()
 {
+    std::string name;
+    Type* type{};
     if (At(LocalToken))
     {
-        const auto name = Skip().Value;
+        name = Skip().Value;
         Expect("=");
-        const auto type = ParseType();
-        const auto opname = Expect(IdToken).Value;
-        const auto value = ParseInstruction(type, opname);
-        value->SetName(name);
-        return value;
+        type = ParseType();
     }
 
-    const auto opname = Expect(IdToken).Value;
-    if (NextAt(":"))
-        return new Block(m_Dest.GetContext().GetBlockType(), opname);
-    return ParseInstruction({}, opname);
+    const auto code_name = Expect(IdToken).Value;
+
+    if (name.empty() && !type && NextAt(":"))
+        return new Block(m_Dest.GetContext().GetBlockType(), code_name);
+
+    return ParseInstruction(type, name, code_name);
 }

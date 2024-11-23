@@ -10,7 +10,7 @@ Brewer::Instruction::Instruction(Type* type, std::string name, const Code code, 
         operand->AddUse(this);
 }
 
-std::ostream& Brewer::Instruction::Print(std::ostream& os) const
+std::ostream& Brewer::Instruction::PrintIR(std::ostream& os) const
 {
     if (!GetName().empty())
         GetType()->Print(os << '%' << GetName() << " = ") << ' ';
@@ -19,7 +19,7 @@ std::ostream& Brewer::Instruction::Print(std::ostream& os) const
     for (unsigned i = 0; i < m_Operands.size(); ++i)
     {
         if (i > 0) os << ", ";
-        m_Operands[i]->PrintOperand(os);
+        m_Operands[i]->PrintIROperand(os);
     }
     return os;
 }
@@ -34,13 +34,30 @@ void Brewer::Instruction::ReplaceUseOf(Value* old_value, Value* new_value)
         }
 }
 
+Brewer::Instruction::Code Brewer::Instruction::GetCode() const
+{
+    return m_Code;
+}
+
+Brewer::Value* Brewer::Instruction::GetOperand(const unsigned i) const
+{
+    return m_Operands[i];
+}
+
+unsigned Brewer::Instruction::GetNumOperands() const
+{
+    return m_Operands.size();
+}
+
 Brewer::Instruction::Code Brewer::ToCode(const std::string& name)
 {
     static std::map<std::string, Instruction::Code> codes
     {
+        {"icmp.lt", Instruction::ICmpLT},
         {"icmp.le", Instruction::ICmpLE},
         {"isub", Instruction::ISub},
         {"iadd", Instruction::IAdd},
+        {"ptrcast", Instruction::PtrCast},
         {"call", Instruction::Call},
         {"gep", Instruction::GEP},
         {"phi", Instruction::PHI},
@@ -57,9 +74,11 @@ std::string Brewer::ToString(const Instruction::Code code)
 {
     static std::map<Instruction::Code, std::string> codes
     {
+        {Instruction::ICmpLT, "icmp.lt"},
         {Instruction::ICmpLE, "icmp.le"},
         {Instruction::ISub, "isub"},
         {Instruction::IAdd, "iadd"},
+        {Instruction::PtrCast, "ptrcast"},
         {Instruction::Call, "call"},
         {Instruction::GEP, "gep"},
         {Instruction::PHI, "phi"},

@@ -16,18 +16,19 @@ Brewer::Function::Function(
         arg->AddUse(this);
 }
 
-std::ostream& Brewer::Function::Print(std::ostream& os) const
+std::ostream& Brewer::Function::PrintIR(std::ostream& os) const
 {
     const auto type = dynamic_cast<FunctionType*>(dynamic_cast<PointerType*>(GetType())->ElementType());
 
-    if (m_Blocks.empty()) os << "declare ";
+    if (m_Blocks.empty())
+        os << "declare ";
     else os << "define ";
 
     type->ResultType()->Print(os << GetLinkage() << ' ') << " @" << GetName() << '(';
     for (unsigned i = 0; i < m_Args.size(); ++i)
     {
         if (i > 0) os << ", ";
-        m_Args[i]->PrintOperand(os);
+        m_Args[i]->PrintIROperand(os);
     }
     if (type->VarArg())
     {
@@ -42,91 +43,80 @@ std::ostream& Brewer::Function::Print(std::ostream& os) const
 
     os << " {" << std::endl;
     for (const auto& block : m_Blocks)
-        block->Print(os);
+        block->PrintIR(os);
     return os << '}';
 }
 
 void Brewer::Function::ReplaceUseOf(Value* old_value, Value* new_value)
 {
-    for (auto& arg : m_Args)
-        if (arg == old_value)
-        {
-            arg = dynamic_cast<Argument*>(new_value);
-            return;
-        }
-    for (auto& block : m_Blocks)
-        if (block == old_value)
-        {
-            block = dynamic_cast<Block*>(new_value);
-            return;
-        }
-    Error("replace invalid use");
-}
-
-Brewer::Block* Brewer::Function::GetBlock(BlockType* type, const std::string& name)
-{
-    for (const auto& m_Block : m_Blocks)
-        if (m_Block->GetName() == name) return m_Block;
-
-    const auto block = new Block(type, name);
-    block->AddUse(this);
-    m_Blocks.push_back(block);
-    return block;
+    Replace(m_Args, old_value, new_value);
+    Replace(m_Blocks, old_value, new_value);
 }
 
 Brewer::NamedValue* Brewer::Function::GetValue(Type* type, const std::string& name)
 {
-    for (const auto& arg : m_Args)
-        if (arg->GetName() == name)
-        {
-            if (arg->GetType() != type)
-                Error("type mismatch: {} != {}", arg->GetType(), type);
-            return arg;
-        }
+    if (const auto value = Find(m_PreUses, type, name))
+        return value;
+    if (const auto value = Find(m_Args, type, name))
+        return value;
+    if (const auto value = Find(m_Blocks, type, name))
+        return value;
+
     for (const auto& block : m_Blocks)
         if (const auto value = block->GetValue(type, name))
             return value;
 
-    const auto named = new NamedValue(type, name);
-    m_PreUses.push_back(named);
-    return named;
+    const auto pre_use = new NamedValue(type, name);
+    m_PreUses.push_back(pre_use);
+    return pre_use;
 }
 
 void Brewer::Function::Append(Value* value)
 {
-    if (const auto block = dynamic_cast<Block*>(value))
+    if (const auto named = dynamic_cast<NamedValue*>(value))
     {
-        unsigned i = 0;
-        for (; i < m_Blocks.size(); ++i)
-            if (m_Blocks[i]->GetName() == block->GetName())
-            {
-                m_Blocks[i]->ReplaceAllUses(block);
-                break;
-            }
-        if (i >= m_Blocks.size())
+        if (const auto pre_use = Erase(m_PreUses, named->GetName()))
+            pre_use->ReplaceAllUses(value);
+
+        if (const auto block = dynamic_cast<Block*>(value))
         {
             block->AddUse(this);
             m_Blocks.push_back(block);
+            return;
         }
-        m_InsertBlock = block;
-        return;
     }
 
-    if (!m_InsertBlock)
+    if (m_Blocks.empty())
     {
-        m_InsertBlock = new Block(value->GetType()->GetContext().GetBlockType(), {});
-        m_InsertBlock->AddUse(this);
-        m_Blocks.push_back(m_InsertBlock);
+        const auto block = new Block(value->GetType()->GetContext().GetBlockType(), {});
+        block->AddUse(this);
+        m_Blocks.push_back(block);
     }
 
-    if (const auto named = dynamic_cast<NamedValue*>(value))
-        for (unsigned i = 0; i < m_PreUses.size(); ++i)
-            if (named->GetName() == m_PreUses[i]->GetName())
-            {
-                m_PreUses[i]->ReplaceAllUses(value);
-                m_PreUses.erase(m_PreUses.begin() + i);
-                break;
-            }
+    m_Blocks.back()->Append(value);
+}
 
-    m_InsertBlock->Append(value);
+bool Brewer::Function::IsEmpty() const
+{
+    return m_Blocks.empty();
+}
+
+Brewer::Argument* Brewer::Function::GetArgument(const unsigned i) const
+{
+    return m_Args[i];
+}
+
+unsigned Brewer::Function::GetNumArguments() const
+{
+    return m_Args.size();
+}
+
+Brewer::Block* Brewer::Function::GetBlock(const unsigned i) const
+{
+    return m_Blocks[i];
+}
+
+unsigned Brewer::Function::GetNumBlocks() const
+{
+    return m_Blocks.size();
 }

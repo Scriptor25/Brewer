@@ -11,7 +11,7 @@ namespace Brewer
     public:
         explicit Constant(Type* type);
 
-        std::ostream& Print(std::ostream& os) const override;
+        std::ostream& PrintIR(std::ostream& os) const override;
     };
 
     class ConstantInt : public Constant
@@ -19,7 +19,9 @@ namespace Brewer
     public:
         ConstantInt(IntType* type, uint64_t val);
 
-        std::ostream& PrintOperand(std::ostream& os) const override;
+        std::ostream& PrintIROperand(std::ostream& os) const override;
+
+        [[nodiscard]] uint64_t GetVal() const;
 
     private:
         uint64_t m_Val;
@@ -30,7 +32,9 @@ namespace Brewer
     public:
         ConstantFloat(FloatType* type, double val);
 
-        std::ostream& PrintOperand(std::ostream& os) const override;
+        std::ostream& PrintIROperand(std::ostream& os) const override;
+
+        [[nodiscard]] double GetVal() const;
 
     private:
         double m_Val;
@@ -41,7 +45,15 @@ namespace Brewer
     public:
         ConstantArray(ArrayType* type, std::vector<Constant*> elements);
 
-        std::ostream& PrintOperand(std::ostream& os) const override;
+        std::ostream& PrintIROperand(std::ostream& os) const override;
+
+        template <typename T = Constant>
+        [[nodiscard]] T* GetElement(const unsigned i) const
+        {
+            return dynamic_cast<T*>(m_Elements[i]);
+        }
+
+        [[nodiscard]] unsigned GetNumElements() const;
 
     private:
         std::vector<Constant*> m_Elements;

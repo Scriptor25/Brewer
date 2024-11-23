@@ -10,9 +10,11 @@ namespace Brewer
     public:
         enum Code
         {
+            ICmpLT,
             ICmpLE,
-            ISub,
             IAdd,
+            ISub,
+            PtrCast,
             Call,
             GEP,
             PHI,
@@ -22,9 +24,13 @@ namespace Brewer
 
         Instruction(Type* type, std::string name, Code code, std::vector<Value*> operands);
 
-        std::ostream& Print(std::ostream& os) const override;
+        std::ostream& PrintIR(std::ostream& os) const override;
 
         void ReplaceUseOf(Value* old_value, Value* new_value) override;
+
+        [[nodiscard]] Code GetCode() const;
+        [[nodiscard]] Value* GetOperand(unsigned i) const;
+        [[nodiscard]] unsigned GetNumOperands() const;
 
     private:
         Code m_Code;

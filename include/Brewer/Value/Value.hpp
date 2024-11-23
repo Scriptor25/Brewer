@@ -1,5 +1,8 @@
 #pragma once
 
+#include <format>
+#include <sstream>
+#include <string>
 #include <vector>
 #include <Brewer/Brewer.hpp>
 
@@ -9,47 +12,46 @@ namespace Brewer
     {
     public:
         explicit Value(Type* type);
-        virtual ~Value() = default;
+        virtual ~Value();
 
-        [[nodiscard]] Type* GetType() const;
+        unsigned GetIndex() const;
+
+        template <typename T = Type>
+        [[nodiscard]] T* GetType() const
+        {
+            return dynamic_cast<T*>(m_Type);
+        }
 
         std::ostream& PrintUseList(std::ostream& os) const;
 
-        virtual std::ostream& Print(std::ostream& os) const = 0;
-        virtual std::ostream& PrintOperand(std::ostream& os) const = 0;
+        void Print(Printer* printer);
+        virtual std::ostream& PrintIR(std::ostream& os) const = 0;
+        virtual std::ostream& PrintIROperand(std::ostream& os) const = 0;
 
         void AddUse(Value* use);
         void ReplaceAllUses(Value* new_value);
 
         virtual void ReplaceUseOf(Value* old_value, Value* new_value);
 
-        /**
-         * Inserts this directly before the target value
-         * @param value the target
-         */
-        void InsertBefore(Value* value);
-        /**
-         * Inserts this directly after the target value
-         * @param value the target
-         */
-        void InsertAfter(Value* value);
-        /**
-         * Prepends this to the list of values containing the target value
-         * @param value the target
-         */
-        void PrependBefore(Value* value);
-        /**
-         * Appends this to the list of values containing the target value
-         * @param value the target
-         */
-        void AppendAfter(Value* value);
-
     private:
+        unsigned m_Index;
+
         Type* m_Type;
-
         std::vector<Value*> m_UseList;
-
-        Value* m_Previous{};
-        Value* m_Next{};
     };
 }
+
+template <typename T>
+concept DerivedValue = std::is_base_of_v<Brewer::Value, T>;
+
+template <DerivedValue T>
+struct std::formatter<T*> : std::formatter<std::string>
+{
+    template <typename FormatContext>
+    auto format(T* type, FormatContext& ctx) const
+    {
+        std::stringstream os;
+        type->PrintIROperand(os);
+        return std::formatter<std::string>::format(os.str(), ctx);
+    }
+};

@@ -17,5 +17,6 @@ std::ostream& Brewer::IntType::Print(std::ostream& os) const
 
 unsigned Brewer::IntType::Bits() const
 {
+    if (!this) return 0;
     return m_Bits;
 }

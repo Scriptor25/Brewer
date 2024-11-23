@@ -17,11 +17,6 @@ std::ostream& Brewer::ArrayType::Print(std::ostream& os) const
     return m_ElementType->Print(os << '[') << " x " << m_Size << ']';
 }
 
-Brewer::Type* Brewer::ArrayType::ElementType() const
-{
-    return m_ElementType;
-}
-
 unsigned Brewer::ArrayType::Size() const
 {
     return m_Size;

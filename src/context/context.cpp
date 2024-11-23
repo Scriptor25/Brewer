@@ -43,3 +43,8 @@ Brewer::FunctionType* Brewer::Context::GetFunctionType(
 {
     return GetType<FunctionType>(result_type, arg_types, vararg);
 }
+
+Brewer::PointerType* Brewer::Context::GetStringType()
+{
+    return GetPointerType(GetIntNType(8));
+}

@@ -22,6 +22,8 @@ namespace Brewer
         StructType* GetStructType(const std::vector<Type*>& element_types);
         FunctionType* GetFunctionType(Type* result_type, const std::vector<Type*>& arg_types, bool vararg);
 
+        PointerType* GetStringType();
+
     private:
         template <typename T, typename... Args>
         T* GetType(Args&&... args)

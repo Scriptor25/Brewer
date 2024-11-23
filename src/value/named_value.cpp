@@ -7,22 +7,19 @@ Brewer::NamedValue::NamedValue(Type* type, std::string name)
 {
 }
 
-std::ostream& Brewer::NamedValue::Print(std::ostream& os) const
+std::ostream& Brewer::NamedValue::PrintIR(std::ostream& os) const
 {
-    return PrintOperand(os);
+    return PrintIROperand(os);
 }
 
-std::ostream& Brewer::NamedValue::PrintOperand(std::ostream& os) const
+std::ostream& Brewer::NamedValue::PrintIROperand(std::ostream& os) const
 {
+    if (!GetType() && m_Name.empty())
+        return os << "<null>";
     return GetType()->Print(os) << " %" << m_Name;
 }
 
 const std::string& Brewer::NamedValue::GetName() const
 {
     return m_Name;
-}
-
-void Brewer::NamedValue::SetName(const std::string& name)
-{
-    m_Name = name;
 }

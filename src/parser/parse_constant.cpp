@@ -24,7 +24,7 @@ Brewer::Constant* Brewer::Parser::ParseConstant(Type* type)
         if (!array_type) Error("constant string must have array type");
         const auto size = array_type->Size();
         if (size != str.size()) Error("constant string size must equal array size");
-        const auto element_type = dynamic_cast<IntType*>(array_type->ElementType());
+        const auto element_type = dynamic_cast<IntType*>(array_type->GetElementType());
         if (!element_type) Error("constant string type must have int element type");
         if (element_type->Bits() != 8) Error("constant string element type must be of size 8 bits");
 
@@ -37,7 +37,7 @@ Brewer::Constant* Brewer::Parser::ParseConstant(Type* type)
     {
         const auto array_type = dynamic_cast<ArrayType*>(type);
         const auto size = array_type->Size();
-        const auto element_type = array_type->ElementType();
+        const auto element_type = array_type->GetElementType();
 
         std::vector<Constant*> elements(size);
         for (unsigned i = 0; i < size; ++i)

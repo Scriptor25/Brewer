@@ -7,9 +7,10 @@ Brewer::Constant::Constant(Type* type)
 {
 }
 
-std::ostream& Brewer::Constant::Print(std::ostream& os) const
+
+std::ostream& Brewer::Constant::PrintIR(std::ostream& os) const
 {
-    return PrintOperand(os);
+    return PrintIROperand(os);
 }
 
 Brewer::ConstantInt::ConstantInt(IntType* type, const uint64_t val)
@@ -17,9 +18,14 @@ Brewer::ConstantInt::ConstantInt(IntType* type, const uint64_t val)
 {
 }
 
-std::ostream& Brewer::ConstantInt::PrintOperand(std::ostream& os) const
+std::ostream& Brewer::ConstantInt::PrintIROperand(std::ostream& os) const
 {
     return GetType()->Print(os) << ' ' << m_Val;
+}
+
+uint64_t Brewer::ConstantInt::GetVal() const
+{
+    return m_Val;
 }
 
 Brewer::ConstantFloat::ConstantFloat(FloatType* type, const double val)
@@ -27,9 +33,14 @@ Brewer::ConstantFloat::ConstantFloat(FloatType* type, const double val)
 {
 }
 
-std::ostream& Brewer::ConstantFloat::PrintOperand(std::ostream& os) const
+std::ostream& Brewer::ConstantFloat::PrintIROperand(std::ostream& os) const
 {
     return GetType()->Print(os) << ' ' << m_Val;
+}
+
+double Brewer::ConstantFloat::GetVal() const
+{
+    return m_Val;
 }
 
 Brewer::ConstantArray::ConstantArray(ArrayType* type, std::vector<Constant*> elements)
@@ -37,13 +48,30 @@ Brewer::ConstantArray::ConstantArray(ArrayType* type, std::vector<Constant*> ele
 {
 }
 
-std::ostream& Brewer::ConstantArray::PrintOperand(std::ostream& os) const
+std::ostream& Brewer::ConstantArray::PrintIROperand(std::ostream& os) const
 {
-    GetType()->Print(os) << " [";
+    GetType()->Print(os) << ' ';
+
+    if (GetType<ArrayType>()->GetElementType<IntType>()->Bits() == 8)
+    {
+        os << '"';
+        for (const auto& element : m_Elements)
+            if (const auto i = dynamic_cast<ConstantInt*>(element)->GetVal(); i >= 0x20)
+                os << static_cast<char>(i);
+            else os << '\\' << std::oct << i << std::dec;
+        return os << '"';
+    }
+
+    os << '[';
     for (unsigned i = 0; i < m_Elements.size(); ++i)
     {
         if (i > 0) os << ", ";
-        m_Elements[i]->PrintOperand(os);
+        m_Elements[i]->PrintIROperand(os);
     }
     return os << ']';
+}
+
+unsigned Brewer::ConstantArray::GetNumElements() const
+{
+    return m_Elements.size();
 }

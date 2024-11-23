@@ -9,6 +9,8 @@ namespace Brewer
     public:
         Argument(Type* type, std::string name, unsigned index);
 
+        [[nodiscard]] unsigned GetIndex() const;
+
     private:
         unsigned m_Index;
     };
