@@ -31,6 +31,7 @@ namespace Brewer
         [[nodiscard]] Code GetCode() const;
         [[nodiscard]] Value* GetOperand(unsigned i) const;
         [[nodiscard]] unsigned GetNumOperands() const;
+        [[nodiscard]] std::vector<Value*> GetSubOperands(unsigned begin, unsigned end = 0) const;
 
     private:
         Code m_Code;

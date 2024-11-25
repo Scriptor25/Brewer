@@ -48,7 +48,8 @@ Brewer::Type* Brewer::Parser::ParseType()
         }
     }
 
-    if (!result_type) Error("expected type");
+    if (!result_type)
+        Error("expected type");
 
     while (NextAt("("))
     {

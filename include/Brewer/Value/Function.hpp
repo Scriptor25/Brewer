@@ -26,6 +26,9 @@ namespace Brewer
         [[nodiscard]] Block* GetBlock(unsigned i) const;
         [[nodiscard]] unsigned GetNumBlocks() const;
 
+        [[nodiscard]] unsigned CountArgBytes() const;
+        [[nodiscard]] unsigned CountNamedValueBytes() const;
+
     private:
         std::vector<Argument*> m_Args;
         std::vector<Block*> m_Blocks;

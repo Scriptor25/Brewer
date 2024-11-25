@@ -3,9 +3,9 @@
 
 unsigned Brewer::FunctionType::Hash(const Type* result_type, const std::vector<Type*>& arg_types, const bool vararg)
 {
-    unsigned hash = CombineHash(result_type->Hash(), 0x07);
+    unsigned hash = CombineHash(result_type->GetHash(), 0x07);
     for (const auto& arg : arg_types)
-        hash = CombineHash(hash, arg->Hash());
+        hash = CombineHash(hash, arg->GetHash());
     return CombineHash(hash, std::hash<bool>{}(vararg));
 }
 
@@ -36,17 +36,17 @@ std::ostream& Brewer::FunctionType::Print(std::ostream& os) const
     return os << ')';
 }
 
-Brewer::Type* Brewer::FunctionType::ResultType() const
+unsigned Brewer::FunctionType::CountBytes() const
 {
-    return m_ResultType;
+    return 0;
 }
 
-Brewer::Type* Brewer::FunctionType::ArgType(const unsigned i) const
+unsigned Brewer::FunctionType::GetNumArgs() const
 {
-    return m_ArgTypes[i];
+    return m_ArgTypes.size();
 }
 
-bool Brewer::FunctionType::VarArg() const
+bool Brewer::FunctionType::IsVarArg() const
 {
     return m_VarArg;
 }

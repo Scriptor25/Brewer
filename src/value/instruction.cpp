@@ -49,6 +49,15 @@ unsigned Brewer::Instruction::GetNumOperands() const
     return m_Operands.size();
 }
 
+std::vector<Brewer::Value*> Brewer::Instruction::GetSubOperands(const unsigned begin, unsigned end) const
+{
+    if (!end) end = m_Operands.size();
+    std::vector<Value*> sub_range;
+    for (unsigned i = begin; i < end; ++i)
+        sub_range.push_back(m_Operands[i]);
+    return sub_range;
+}
+
 Brewer::Instruction::Code Brewer::ToCode(const std::string& name)
 {
     static std::map<std::string, Instruction::Code> codes

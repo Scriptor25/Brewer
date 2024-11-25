@@ -21,8 +21,6 @@ namespace Brewer
         void Print(ArrayType* type);
 
         void Print(Constant* value);
-        void Print(ConstantInt* value);
-        void Print(ConstantFloat* value);
         void Print(ConstantArray* value);
         void Print(NamedValue* value);
         void Print(GlobalValue* value);
@@ -31,15 +29,13 @@ namespace Brewer
         void Print(Block* value);
         void Print(Instruction* value);
 
-        void PrintOperand(Value* value);
-        void PrintOperand(Constant* value);
-        void PrintOperand(ConstantInt* value);
-        void PrintOperand(ConstantFloat* value);
-        void PrintOperand(ConstantArray* value);
-        void PrintOperand(NamedValue* value);
-        void PrintOperand(GlobalValue* value);
-        void PrintOperand(Function* value);
+        void PrintGlobalOperand(Value* value);
+        void PrintGlobalOperand(Constant* value);
+        void PrintGlobalOperand(ConstantInt* value);
+        void PrintGlobalOperand(ConstantArray* value);
 
-        std::map<Value*, bool> m_Printed;
+        void PrintOperand(Value* value);
+
+        void PrintCallee(Value* value);
     };
 }

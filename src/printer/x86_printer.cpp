@@ -7,6 +7,7 @@
 #include <Brewer/Value/GlobalValue.hpp>
 #include <Brewer/Value/GlobalVariable.hpp>
 #include <Brewer/Value/Instruction.hpp>
+#include <Brewer/Value/Value.hpp>
 
 Brewer::X86Printer::X86Printer(std::ostream& stream)
     : Printer(stream)
@@ -52,6 +53,15 @@ void Brewer::X86Printer::Print(IntType* type)
     case 8:
         S() << ".byte";
         return;
+    case 16:
+        S() << ".word";
+        return;
+    case 32:
+        S() << ".long";
+        return;
+    case 64:
+        S() << ".quad";
+        return;
 
     default:
         break;
@@ -65,57 +75,34 @@ void Brewer::X86Printer::Print(FloatType* type)
     Error("X86Printer::Print(FloatType*) not implemented: {}", type);
 }
 
-void Brewer::X86Printer::Print(PointerType* type)
+void Brewer::X86Printer::Print(PointerType*)
 {
-    Error("X86Printer::Print(PointerType*) not implemented: {}", type);
+    S() << ".quad";
 }
 
 void Brewer::X86Printer::Print(ArrayType* type)
 {
-    Print(type->GetElementType());
+    S() << ".quad";
 }
 
 void Brewer::X86Printer::Print(Constant* value)
 {
-    if (const auto ptr = dynamic_cast<ConstantInt*>(value))
-        return Print(ptr);
-    if (const auto ptr = dynamic_cast<ConstantFloat*>(value))
-        return Print(ptr);
     if (const auto ptr = dynamic_cast<ConstantArray*>(value))
         return Print(ptr);
 
     Error("X86Printer::Print(Constant*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::Print(ConstantInt* value)
-{
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
-    Error("X86Printer::Print(ConstantInt*) not implemented: {}", value);
-}
-
-void Brewer::X86Printer::Print(ConstantFloat* value)
-{
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
-    Error("X86Printer::Print(ConstantFloat*) not implemented: {}", value);
-}
-
 void Brewer::X86Printer::Print(ConstantArray* value)
 {
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
     S() << ".section .rodata" << std::endl;
     S() << ".LC" << value->GetIndex() << ": ";
-    Print(value->GetType());
+    Print(value->GetType<ArrayType>()->GetElementType());
     S() << ' ';
     for (unsigned i = 0; i < value->GetNumElements(); ++i)
     {
         if (i > 0) S() << ", ";
-        PrintOperand(value->GetElement(i));
+        PrintGlobalOperand(value->GetElement(i));
     }
     S() << std::endl;
 }
@@ -144,57 +131,65 @@ void Brewer::X86Printer::Print(GlobalValue* value)
 
 void Brewer::X86Printer::Print(GlobalVariable* value)
 {
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
-    Print(value->GetInitializer());
     S() << ".section .data" << std::endl;
     switch (value->GetLinkage())
     {
     case GlobalValue::ExternLinkage:
-        S() << ".global ";
+        S() << ".global " << value->GetName() << std::endl;
         break;
     case GlobalValue::InternLinkage:
-        S() << ".local ";
+        S() << ".local " << value->GetName() << std::endl;
         break;
     case GlobalValue::WeakLinkage:
-        S() << ".weak ";
+        S() << ".weak " << value->GetName() << std::endl;
         break;
-    case GlobalValue::TentativeLinkage:
-    case GlobalValue::CommonLinkage:
+
     case GlobalValue::NoLinkage:
+    case GlobalValue::CommonLinkage:
+    case GlobalValue::TentativeLinkage:
     default: break;
     }
+
+    if (!value->GetInitializer())
+    {
+        S() << ".extern " << value->GetName() << std::endl;
+        return;
+    }
+
     S() << value->GetName() << ": ";
-    PrintOperand(value->GetInitializer());
+    Print(value->GetInitializer()->GetType());
+    S() << ' ';
+    PrintGlobalOperand(value->GetInitializer());
     S() << std::endl;
+
+    Print(value->GetInitializer());
 }
 
 void Brewer::X86Printer::Print(Function* value)
 {
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
-    if (value->IsEmpty())
-        return;
-
     S() << ".section .text" << std::endl;
     switch (value->GetLinkage())
     {
     case GlobalValue::ExternLinkage:
-        S() << ".global ";
+        S() << ".global " << value->GetName() << std::endl;
         break;
     case GlobalValue::InternLinkage:
-        S() << ".local ";
+        S() << ".local " << value->GetName() << std::endl;
         break;
     case GlobalValue::WeakLinkage:
-        S() << ".weak ";
+        S() << ".weak " << value->GetName() << std::endl;
         break;
 
-    case GlobalValue::TentativeLinkage:
-    case GlobalValue::CommonLinkage:
     case GlobalValue::NoLinkage:
+    case GlobalValue::CommonLinkage:
+    case GlobalValue::TentativeLinkage:
     default: break;
+    }
+
+    if (value->IsEmpty())
+    {
+        S() << ".extern " << value->GetName() << std::endl;
+        return;
     }
 
     S() << value->GetName() << ':' << std::endl;
@@ -208,107 +203,67 @@ void Brewer::X86Printer::Print(Function* value)
 
 void Brewer::X86Printer::Print(Block* value)
 {
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
-
-    if (!value->GetName().empty())
-        S() << ".L" << value->GetIndex() << ':' << std::endl;
-
+    S() << ".L" << value->GetIndex() << ':' << std::endl;
     for (unsigned i = 0; i < value->GetNumValues(); ++i)
-    {
         Print(value->GetValue(i));
-        S() << std::endl;
-    }
 }
 
 void Brewer::X86Printer::Print(Instruction* value)
 {
-    if (m_Printed[value]) return;
-    m_Printed[value] = true;
     switch (value->GetCode())
     {
-    case Instruction::ICmpLT:
-        break;
-    case Instruction::ICmpLE:
-        break;
-    case Instruction::IAdd:
-        break;
-    case Instruction::ISub:
-        break;
-    case Instruction::PtrCast:
-        break;
     case Instruction::Call:
-        S() << "call ";
-        PrintOperand(value->GetOperand(0));
-        S() << std::endl;
+        {
+            const auto callee = value->GetOperand(0);
+            const auto args = value->GetSubOperands(1);
+
+            for (unsigned i = 0; i < args.size(); ++i)
+            {
+                S() << "mov";
+                PrintOperand(args[i]);
+            }
+
+            S() << "call ";
+            PrintCallee(callee);
+            S() << std::endl;
+        }
         return;
-    case Instruction::GEP:
-        break;
-    case Instruction::PHI:
-        break;
-    case Instruction::Ret:
-        break;
-    case Instruction::Br:
-        break;
+
+    default: break;
     }
 
     Error("X86Printer::Print(Instruction*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintOperand(Value* value)
+void Brewer::X86Printer::PrintGlobalOperand(Value* value)
 {
     if (const auto ptr = dynamic_cast<Constant*>(value))
-        return PrintOperand(ptr);
-    if (const auto ptr = dynamic_cast<NamedValue*>(value))
-        return PrintOperand(ptr);
+        return PrintGlobalOperand(ptr);
 
-    Error("X86Printer::PrintOperand(Value*) not implemented: {}", value);
+    Error("X86Printer::PrintGlobalOperand(Value*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintOperand(Constant* value)
+void Brewer::X86Printer::PrintGlobalOperand(Constant* value)
 {
     if (const auto ptr = dynamic_cast<ConstantInt*>(value))
-        return PrintOperand(ptr);
-    if (const auto ptr = dynamic_cast<ConstantFloat*>(value))
-        return PrintOperand(ptr);
+        return PrintGlobalOperand(ptr);
     if (const auto ptr = dynamic_cast<ConstantArray*>(value))
-        return PrintOperand(ptr);
+        return PrintGlobalOperand(ptr);
 
-    Error("X86Printer::PrintOperand(Constant*) not implemented: {}", value);
+    Error("X86Printer::PrintGlobalOperand(Constant*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintOperand(ConstantInt* value)
+void Brewer::X86Printer::PrintGlobalOperand(ConstantInt* value)
 {
     S() << value->GetVal();
 }
 
-void Brewer::X86Printer::PrintOperand(ConstantFloat* value)
+void Brewer::X86Printer::PrintGlobalOperand(ConstantArray* value)
 {
-    Error("X86Printer::PrintOperand(ConstantFloat*) not implemented: {}", value);
+    S() << ".LC" << value->GetIndex();
 }
 
-void Brewer::X86Printer::PrintOperand(ConstantArray* value)
+void Brewer::X86Printer::PrintCallee(Value* value)
 {
-    S() << ".quad .LC" << value->GetIndex();
-}
-
-void Brewer::X86Printer::PrintOperand(NamedValue* value)
-{
-    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
-        return PrintOperand(ptr);
-
-    Error("X86Printer::PrintOperand(NamedValue*) not implemented: {}", value);
-}
-
-void Brewer::X86Printer::PrintOperand(GlobalValue* value)
-{
-    if (const auto ptr = dynamic_cast<Function*>(value))
-        return PrintOperand(ptr);
-
-    Error("X86Printer::PrintOperand(GlobalValue*) not implemented: {}", value);
-}
-
-void Brewer::X86Printer::PrintOperand(Function* value)
-{
-    S() << value->GetName();
+    Error("X86Printer::PrintCallee(Value*) not implemented: {}", value);
 }

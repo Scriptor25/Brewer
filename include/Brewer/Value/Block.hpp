@@ -18,6 +18,8 @@ namespace Brewer
         [[nodiscard]] Value* GetValue(unsigned i) const;
         [[nodiscard]] unsigned GetNumValues() const;
 
+        [[nodiscard]] unsigned CountNamedValueBytes() const;
+
     private:
         std::vector<Value*> m_Values;
     };

@@ -15,5 +15,6 @@ void Brewer::Parser::Parse(std::istream& stream, Module& dest)
             parser.ParseFunction();
             continue;
         }
+        Error("unused token '{}'", parser.m_Token.Value);
     }
 }

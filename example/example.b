@@ -9,7 +9,7 @@ global intern @message = [i8 x 14] "fib(%d) = %d\0A\00"
 ;
 define extern i32 @main(i32 %argc, [[i8]] %argv) {
     %0 = i32 call [i32(i32)] @fib, i32 10
-    %1 = [i8] ptrcast [[i8 x 14]] @message
+    %1 = [i8] gep [[i8 x 14]] @message, i32 0, i32 0
     call [i32([i8], ...)] @printf, [i8] %1, i32 10, i32 %0
     ret i32 %0
 }

@@ -18,19 +18,19 @@ Brewer::Function::Function(
 
 std::ostream& Brewer::Function::PrintIR(std::ostream& os) const
 {
-    const auto type = dynamic_cast<FunctionType*>(dynamic_cast<PointerType*>(GetType())->ElementType());
+    const auto type = dynamic_cast<FunctionType*>(dynamic_cast<PointerType*>(GetType())->GetElementType());
 
     if (m_Blocks.empty())
         os << "declare ";
     else os << "define ";
 
-    type->ResultType()->Print(os << GetLinkage() << ' ') << " @" << GetName() << '(';
+    type->GetResultType()->Print(os << GetLinkage() << ' ') << " @" << GetName() << '(';
     for (unsigned i = 0; i < m_Args.size(); ++i)
     {
         if (i > 0) os << ", ";
         m_Args[i]->PrintIROperand(os);
     }
-    if (type->VarArg())
+    if (type->IsVarArg())
     {
         if (!m_Args.empty())
             os << ", ";
@@ -119,4 +119,20 @@ Brewer::Block* Brewer::Function::GetBlock(const unsigned i) const
 unsigned Brewer::Function::GetNumBlocks() const
 {
     return m_Blocks.size();
+}
+
+unsigned Brewer::Function::CountArgBytes() const
+{
+    unsigned bytes = 0;
+    for (const auto& arg : m_Args)
+        bytes += arg->GetType()->CountBytes();
+    return bytes;
+}
+
+unsigned Brewer::Function::CountNamedValueBytes() const
+{
+    unsigned bytes = 0;
+    for (const auto& block : m_Blocks)
+        bytes += block->CountNamedValueBytes();
+    return bytes;
 }

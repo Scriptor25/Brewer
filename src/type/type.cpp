@@ -15,7 +15,7 @@ Brewer::Context& Brewer::Type::GetContext() const
     return m_Context;
 }
 
-unsigned Brewer::Type::Hash() const
+unsigned Brewer::Type::GetHash() const
 {
     return m_Hash;
 }

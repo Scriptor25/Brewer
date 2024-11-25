@@ -36,7 +36,7 @@ Brewer::GlobalValue* Brewer::Module::GetGlobalValue(Type* type, const std::strin
     if (const auto global = Find(m_SymbolTable, type, name))
         return global;
 
-    const auto global = new GlobalValue(dynamic_cast<PointerType*>(type)->ElementType(), name, GlobalValue::NoLinkage);
+    const auto global = new GlobalValue(dynamic_cast<PointerType*>(type)->GetElementType(), name, GlobalValue::NoLinkage);
     m_SymbolTable.push_back(global);
     return global;
 }

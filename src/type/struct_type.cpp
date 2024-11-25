@@ -5,7 +5,7 @@ unsigned Brewer::StructType::Hash(const std::vector<Type*>& element_types)
 {
     unsigned hash = 0x06;
     for (const auto& elem : element_types)
-        hash = CombineHash(hash, elem->Hash());
+        hash = CombineHash(hash, elem->GetHash());
     return hash;
 }
 
@@ -23,4 +23,17 @@ std::ostream& Brewer::StructType::Print(std::ostream& os) const
         m_ElementTypes[i]->Print(os);
     }
     return os << " }";
+}
+
+unsigned Brewer::StructType::CountBytes() const
+{
+    unsigned bytes = 0;
+    for (const auto& ty : m_ElementTypes)
+        bytes += ty->CountBytes();
+    return bytes;
+}
+
+unsigned Brewer::StructType::GetNumElements() const
+{
+    return m_ElementTypes.size();
 }

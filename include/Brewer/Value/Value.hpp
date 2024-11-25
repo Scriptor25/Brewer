@@ -14,7 +14,7 @@ namespace Brewer
         explicit Value(Type* type);
         virtual ~Value();
 
-        unsigned GetIndex() const;
+        [[nodiscard]] unsigned GetIndex() const;
 
         template <typename T = Type>
         [[nodiscard]] T* GetType() const

@@ -7,7 +7,7 @@ Brewer::Argument::Argument(Type* type, std::string name, const unsigned index)
 {
 }
 
-unsigned Brewer::Argument::GetIndex() const
+unsigned Brewer::Argument::GetArgIndex() const
 {
     return m_Index;
 }

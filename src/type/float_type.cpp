@@ -14,3 +14,8 @@ std::ostream& Brewer::FloatType::Print(std::ostream& os) const
 {
     return os << 'f' << m_Bits;
 }
+
+unsigned Brewer::FloatType::CountBytes() const
+{
+    return m_Bits / 8;
+}

@@ -14,3 +14,8 @@ std::ostream& Brewer::VoidType::Print(std::ostream& os) const
 {
     return os << "void";
 }
+
+unsigned Brewer::VoidType::CountBytes() const
+{
+    return 0;
+}

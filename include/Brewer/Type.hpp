@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -21,7 +20,9 @@ namespace Brewer
         virtual std::ostream& Print(std::ostream& os) const = 0;
 
         [[nodiscard]] Context& GetContext() const;
-        [[nodiscard]] unsigned Hash() const;
+        [[nodiscard]] unsigned GetHash() const;
+
+        [[nodiscard]] virtual unsigned CountBytes() const = 0;
 
     private:
         Context& m_Context;
@@ -36,6 +37,7 @@ namespace Brewer
         VoidType(Context& context, unsigned hash);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
     };
 
     class BlockType : public Type
@@ -46,6 +48,7 @@ namespace Brewer
         BlockType(Context& context, unsigned hash);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
     };
 
     class IntType : public Type
@@ -56,6 +59,7 @@ namespace Brewer
         IntType(Context& context, unsigned hash, unsigned bits);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
 
         [[nodiscard]] unsigned Bits() const;
 
@@ -71,6 +75,7 @@ namespace Brewer
         FloatType(Context& context, unsigned hash, unsigned bits);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
 
     private:
         unsigned m_Bits;
@@ -84,8 +89,13 @@ namespace Brewer
         PointerType(Context& context, unsigned hash, Type* element_type);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
 
-        [[nodiscard]] Type* ElementType() const;
+        template <typename T = Type>
+        [[nodiscard]] T* GetElementType() const
+        {
+            return dynamic_cast<T*>(m_ElementType);
+        }
 
     private:
         Type* m_ElementType;
@@ -94,24 +104,24 @@ namespace Brewer
     class ArrayType : public Type
     {
     public:
-        static unsigned Hash(const Type* element_type, unsigned size);
+        static unsigned Hash(const Type* element_type, unsigned num_elements);
 
-        ArrayType(Context& context, unsigned hash, Type* element_type, unsigned size);
+        ArrayType(Context& context, unsigned hash, Type* element_type, unsigned num_elements);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
 
         template <typename T = Type>
         [[nodiscard]] T* GetElementType() const
         {
-            if (!this) return {};
             return dynamic_cast<T*>(m_ElementType);
         }
 
-        [[nodiscard]] unsigned Size() const;
+        [[nodiscard]] unsigned GetNumElements() const;
 
     private:
         Type* m_ElementType;
-        unsigned m_Size;
+        unsigned m_NumElements;
     };
 
     class StructType : public Type
@@ -122,6 +132,15 @@ namespace Brewer
         StructType(Context& context, unsigned hash, std::vector<Type*> element_types);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
+
+        template <typename T = Type>
+        [[nodiscard]] T* GetElementType(const unsigned i) const
+        {
+            return dynamic_cast<T*>(m_ElementTypes[i]);
+        }
+
+        [[nodiscard]] unsigned GetNumElements() const;
 
     private:
         std::vector<Type*> m_ElementTypes;
@@ -135,10 +154,22 @@ namespace Brewer
         FunctionType(Context& context, unsigned hash, Type* result_type, std::vector<Type*> arg_types, bool vararg);
 
         std::ostream& Print(std::ostream& os) const override;
+        [[nodiscard]] unsigned CountBytes() const override;
 
-        [[nodiscard]] Type* ResultType() const;
-        [[nodiscard]] Type* ArgType(unsigned i) const;
-        [[nodiscard]] bool VarArg() const;
+        template <typename T = Type>
+        [[nodiscard]] T* GetResultType() const
+        {
+            return dynamic_cast<T*>(m_ResultType);
+        }
+
+        template <typename T = Type>
+        [[nodiscard]] T* GetArgType(const unsigned i) const
+        {
+            return dynamic_cast<T*>(m_ArgTypes[i]);
+        }
+
+        [[nodiscard]] unsigned GetNumArgs() const;
+        [[nodiscard]] bool IsVarArg() const;
 
     private:
         Type* m_ResultType;

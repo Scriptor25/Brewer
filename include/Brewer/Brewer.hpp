@@ -1,8 +1,9 @@
 #pragma once
 
-#define NOERR
+#undef NOERR
 
 #include <format>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -46,18 +47,17 @@ namespace Brewer
 
     class Instruction;
 
-#ifndef NOERR
-    [[noreturn]]
-#endif
-    void Error(const std::string& message);
-
     template <typename... Args>
 #ifndef NOERR
     [[noreturn]]
 #endif
     void Error(const std::string& format, Args... args)
     {
-        Error(std::vformat(format, std::make_format_args(args...)));
+        const auto message = std::vformat(format, std::make_format_args(args...));
+        std::cerr << message << std::endl;
+#ifndef NOERR
+        throw std::runtime_error(message);
+#endif
     }
 
     template <typename T = Value>

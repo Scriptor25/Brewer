@@ -50,3 +50,12 @@ unsigned Brewer::Block::GetNumValues() const
 {
     return m_Values.size();
 }
+
+unsigned Brewer::Block::CountNamedValueBytes() const
+{
+    unsigned bytes = 0;
+    for (const auto& value : m_Values)
+        if (const auto named = dynamic_cast<NamedValue*>(value); named && named->GetType())
+            bytes += named->GetType()->CountBytes();
+    return bytes;
+}
