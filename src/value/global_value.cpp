@@ -1,63 +1,31 @@
-#include <utility>
+#include <map>
 #include <Brewer/Context.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::GlobalValue::GlobalValue(Type* element_type, std::string name, const LinkageType linkage)
-    : NamedValue(element_type->GetContext().GetPointerType(element_type), std::move(name)), m_Linkage(linkage)
+Brewer::GlobalValue::GlobalValue(Type* type, std::string name, const Linkage linkage)
+    : NamedValue(type->GetContext().GetPointerType(type), std::move(name)), m_Linkage(linkage)
 {
 }
 
-std::ostream& Brewer::GlobalValue::PrintIR(std::ostream& os) const
+std::ostream& Brewer::GlobalValue::PrintOperandIR(std::ostream& os, const bool omit_type) const
 {
-    return PrintIROperand(os);
+    if (!omit_type) GetType()->Print(os) << ' ';
+    return os << '@' << GetName();
 }
 
-std::ostream& Brewer::GlobalValue::PrintIROperand(std::ostream& os) const
-{
-    return GetType()->Print(os) << " @" << GetName();
-}
-
-Brewer::GlobalValue::LinkageType Brewer::GlobalValue::GetLinkage() const
+Brewer::GlobalValue::Linkage Brewer::GlobalValue::GetLinkage() const
 {
     return m_Linkage;
 }
 
-Brewer::GlobalValue::LinkageType Brewer::ToLinkage(const std::string& name)
+Brewer::GlobalValue::Linkage Brewer::ToLinkage(const std::string& str)
 {
-    static std::map<std::string, GlobalValue::LinkageType> linkages
+    static std::map<std::string, GlobalValue::Linkage> map
     {
-        {"none", GlobalValue::NoLinkage},
-        {"extern", GlobalValue::ExternLinkage},
-        {"intern", GlobalValue::InternLinkage},
-        {"weak", GlobalValue::WeakLinkage},
-        {"common", GlobalValue::CommonLinkage},
-        {"tentative", GlobalValue::TentativeLinkage},
+        {"local", GlobalValue::Linkage_Local},
+        {"weak", GlobalValue::Linkage_Weak},
+        {"global", GlobalValue::Linkage_Global},
     };
-
-    if (!linkages.contains(name))
-        Error("ToLinkage missing for linkage type '{}'", name);
-    return linkages[name];
-}
-
-std::string Brewer::ToString(const GlobalValue::LinkageType linkage)
-{
-    static std::map<GlobalValue::LinkageType, std::string> linkages
-    {
-        {GlobalValue::NoLinkage, "none"},
-        {GlobalValue::ExternLinkage, "extern"},
-        {GlobalValue::InternLinkage, "intern"},
-        {GlobalValue::WeakLinkage, "weak"},
-        {GlobalValue::CommonLinkage, "common"},
-        {GlobalValue::TentativeLinkage, "tentative"},
-    };
-
-    if (!linkages.contains(linkage))
-        Error("ToString missing for linkage type {}", static_cast<unsigned>(linkage));
-    return linkages[linkage];
-}
-
-std::ostream& Brewer::operator<<(std::ostream& os, const GlobalValue::LinkageType linkage)
-{
-    return os << ToString(linkage);
+    return map[str];
 }

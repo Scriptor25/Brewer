@@ -12,6 +12,16 @@ Brewer::ArrayType::ArrayType(Context& context, const unsigned hash, Type* elemen
 {
 }
 
+Brewer::Type* Brewer::ArrayType::GetElementType() const
+{
+    return m_ElementType;
+}
+
+unsigned Brewer::ArrayType::GetNumElements() const
+{
+    return m_NumElements;
+}
+
 std::ostream& Brewer::ArrayType::Print(std::ostream& os) const
 {
     return m_ElementType->Print(os << '[') << " x " << m_NumElements << ']';
@@ -20,9 +30,4 @@ std::ostream& Brewer::ArrayType::Print(std::ostream& os) const
 unsigned Brewer::ArrayType::CountBytes() const
 {
     return m_NumElements * m_ElementType->CountBytes();
-}
-
-unsigned Brewer::ArrayType::GetNumElements() const
-{
-    return m_NumElements;
 }

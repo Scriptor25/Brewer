@@ -13,7 +13,7 @@ Brewer::Type* Brewer::Parser::ParseType()
         const auto element_type = ParseType();
         if (NextAt("x"))
         {
-            const auto size = Expect(IntToken).IntValue;
+            const auto size = Expect(TokenType_Int).Int;
             result_type = m_Dest.GetContext().GetArrayType(element_type, size);
         }
         else result_type = m_Dest.GetContext().GetPointerType(element_type);
@@ -33,9 +33,9 @@ Brewer::Type* Brewer::Parser::ParseType()
 
         result_type = m_Dest.GetContext().GetStructType(element_types);
     }
-    else if (At(IdToken))
+    else if (At(TokenType_Id))
     {
-        const auto name = Skip().Value;
+        const auto name = Skip().Str;
         if (name.front() == 'i')
         {
             const auto bits = std::stoi(name.substr(1));

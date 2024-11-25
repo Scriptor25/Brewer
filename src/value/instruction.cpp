@@ -1,37 +1,22 @@
 #include <map>
-#include <utility>
 #include <Brewer/Type.hpp>
-#include <Brewer/Value/Instruction.hpp>
+#include <Brewer/Value/Value.hpp>
 
-Brewer::Instruction::Instruction(Type* type, std::string name, const Code code, std::vector<Value*> operands)
-    : NamedValue(type, std::move(name)), m_Code(code), m_Operands(std::move(operands))
+Brewer::Instruction::Instruction(Type* type, const Code code, std::vector<Value*> operands)
+    : Value(type), m_Code(code), m_Operands(std::move(operands))
 {
-    for (const auto& operand : m_Operands)
-        operand->AddUse(this);
 }
 
-std::ostream& Brewer::Instruction::PrintIR(std::ostream& os) const
+std::ostream& Brewer::Instruction::PrintOperandIR(std::ostream& os, bool omit_type) const
 {
-    if (!GetName().empty())
-        GetType()->Print(os << '%' << GetName() << " = ") << ' ';
-
-    os << m_Code << ' ';
+    if (!omit_type) GetType()->Print(os) << ' ';
+    os << ToString(m_Code) << ' ';
     for (unsigned i = 0; i < m_Operands.size(); ++i)
     {
         if (i > 0) os << ", ";
-        m_Operands[i]->PrintIROperand(os);
+        m_Operands[i]->PrintOperandIR(os, false);
     }
     return os;
-}
-
-void Brewer::Instruction::ReplaceUseOf(Value* old_value, Value* new_value)
-{
-    for (auto& operand : m_Operands)
-        if (operand == old_value)
-        {
-            operand = new_value;
-            break;
-        }
 }
 
 Brewer::Instruction::Code Brewer::Instruction::GetCode() const
@@ -49,54 +34,42 @@ unsigned Brewer::Instruction::GetNumOperands() const
     return m_Operands.size();
 }
 
-std::vector<Brewer::Value*> Brewer::Instruction::GetSubOperands(const unsigned begin, unsigned end) const
+std::vector<Brewer::Value*> Brewer::Instruction::GetOperandRange(unsigned beg, unsigned end) const
 {
-    if (!end) end = m_Operands.size();
-    std::vector<Value*> sub_range;
-    for (unsigned i = begin; i < end; ++i)
-        sub_range.push_back(m_Operands[i]);
-    return sub_range;
+    std::vector<Value*> result;
+    for (unsigned i = beg; i < end && i < m_Operands.size(); ++i)
+        result.push_back(m_Operands[i]);
+    return result;
 }
 
-Brewer::Instruction::Code Brewer::ToCode(const std::string& name)
+Brewer::Instruction::Code Brewer::ToCode(const std::string& str)
 {
-    static std::map<std::string, Instruction::Code> codes
+    static std::map<std::string, Instruction::Code> map
     {
-        {"isub", Instruction::ISub},
-        {"iadd", Instruction::IAdd},
+        {"add", Instruction::Add},
+        {"sub", Instruction::Sub},
         {"call", Instruction::Call},
-        {"gep", Instruction::GEP},
-        {"phi", Instruction::PHI},
+        {"gep", Instruction::Gep},
         {"ret", Instruction::Ret},
         {"br", Instruction::Br},
-        {"br.lt", Instruction::Br_LT},
+        {"br.lt", Instruction::Br_Lt},
     };
-
-    if (!codes.contains(name))
-        Error("ToCode missing for instruction code '{}'", name);
-    return codes[name];
+    if (!map.contains(str))
+        return Instruction::None;
+    return map[str];
 }
 
 std::string Brewer::ToString(const Instruction::Code code)
 {
-    static std::map<Instruction::Code, std::string> codes
+    static std::map<Instruction::Code, std::string> map
     {
-        {Instruction::ISub, "isub"},
-        {Instruction::IAdd, "iadd"},
+        {Instruction::Add, "add"},
+        {Instruction::Sub, "sub"},
         {Instruction::Call, "call"},
-        {Instruction::GEP, "gep"},
-        {Instruction::PHI, "phi"},
+        {Instruction::Gep, "gep"},
         {Instruction::Ret, "ret"},
         {Instruction::Br, "br"},
-        {Instruction::Br_LT, "br.lt"},
+        {Instruction::Br_Lt, "br.lt"},
     };
-
-    if (!codes.contains(code))
-        Error("ToString missing for instruction code {}", static_cast<unsigned>(code));
-    return codes[code];
-}
-
-std::ostream& Brewer::operator<<(std::ostream& os, const Instruction::Code code)
-{
-    return os << ToString(code);
+    return map[code];
 }

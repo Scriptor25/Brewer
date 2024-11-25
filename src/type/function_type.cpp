@@ -19,6 +19,26 @@ Brewer::FunctionType::FunctionType(
 {
 }
 
+Brewer::Type* Brewer::FunctionType::GetResultType() const
+{
+    return m_ResultType;
+}
+
+Brewer::Type* Brewer::FunctionType::GetArgType(const unsigned i) const
+{
+    return m_ArgTypes[i];
+}
+
+unsigned Brewer::FunctionType::GetNumArgs() const
+{
+    return m_ArgTypes.size();
+}
+
+bool Brewer::FunctionType::IsVarArg() const
+{
+    return m_VarArg;
+}
+
 std::ostream& Brewer::FunctionType::Print(std::ostream& os) const
 {
     m_ResultType->Print(os) << '(';
@@ -39,14 +59,4 @@ std::ostream& Brewer::FunctionType::Print(std::ostream& os) const
 unsigned Brewer::FunctionType::CountBytes() const
 {
     return 0;
-}
-
-unsigned Brewer::FunctionType::GetNumArgs() const
-{
-    return m_ArgTypes.size();
-}
-
-bool Brewer::FunctionType::IsVarArg() const
-{
-    return m_VarArg;
 }

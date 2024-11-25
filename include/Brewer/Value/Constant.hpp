@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <Brewer/Value/Value.hpp>
 
 namespace Brewer
@@ -9,9 +8,7 @@ namespace Brewer
     class Constant : public Value
     {
     public:
-        explicit Constant(Type* type);
-
-        std::ostream& PrintIR(std::ostream& os) const override;
+        Constant(Type* type);
     };
 
     class ConstantInt : public Constant
@@ -19,9 +16,9 @@ namespace Brewer
     public:
         ConstantInt(IntType* type, uint64_t val);
 
-        std::ostream& PrintIROperand(std::ostream& os) const override;
+        uint64_t GetVal() const;
 
-        [[nodiscard]] uint64_t GetVal() const;
+        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
         uint64_t m_Val;
@@ -32,9 +29,9 @@ namespace Brewer
     public:
         ConstantFloat(FloatType* type, double val);
 
-        std::ostream& PrintIROperand(std::ostream& os) const override;
+        double GetVal() const;
 
-        [[nodiscard]] double GetVal() const;
+        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
         double m_Val;
@@ -43,19 +40,14 @@ namespace Brewer
     class ConstantArray : public Constant
     {
     public:
-        ConstantArray(ArrayType* type, std::vector<Constant*> elements);
+        ConstantArray(ArrayType* type, std::vector<Constant*> vals);
 
-        std::ostream& PrintIROperand(std::ostream& os) const override;
+        Constant* GetVal(unsigned i) const;
+        unsigned GetNumVals() const;
 
-        template <typename T = Constant>
-        [[nodiscard]] T* GetElement(const unsigned i) const
-        {
-            return dynamic_cast<T*>(m_Elements[i]);
-        }
-
-        [[nodiscard]] unsigned GetNumElements() const;
+        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
-        std::vector<Constant*> m_Elements;
+        std::vector<Constant*> m_Vals;
     };
 }

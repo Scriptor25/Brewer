@@ -10,6 +10,11 @@ Brewer::PointerType::PointerType(Context& context, const unsigned hash, Type* el
 {
 }
 
+Brewer::Type* Brewer::PointerType::GetElementType() const
+{
+    return m_ElementType;
+}
+
 std::ostream& Brewer::PointerType::Print(std::ostream& os) const
 {
     return m_ElementType->Print(os << '[') << ']';

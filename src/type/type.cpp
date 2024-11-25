@@ -19,3 +19,43 @@ unsigned Brewer::Type::GetHash() const
 {
     return m_Hash;
 }
+
+unsigned Brewer::Type::GetBits() const
+{
+    return 0;
+}
+
+Brewer::Type* Brewer::Type::GetElementType() const
+{
+    return {};
+}
+
+Brewer::Type* Brewer::Type::GetElementType(unsigned) const
+{
+    return {};
+}
+
+unsigned Brewer::Type::GetNumElements() const
+{
+    return 0;
+}
+
+Brewer::Type* Brewer::Type::GetResultType() const
+{
+    return {};
+}
+
+Brewer::Type* Brewer::Type::GetArgType(unsigned) const
+{
+    return {};
+}
+
+unsigned Brewer::Type::GetNumArgs() const
+{
+    return 0;
+}
+
+bool Brewer::Type::IsVarArg() const
+{
+    return false;
+}

@@ -30,22 +30,21 @@ namespace Brewer
     class FunctionType;
 
     class Value;
+    class Instruction;
+
+    class NamedValue;
+    class Assignment;
+    class FunctionArg;
+    class FunctionBlock;
 
     class Constant;
     class ConstantInt;
     class ConstantFloat;
     class ConstantArray;
-    class ConstantStruct;
 
-    class NamedValue;
     class GlobalValue;
     class GlobalVariable;
-    class Function;
-
-    class Argument;
-    class Block;
-
-    class Instruction;
+    class GlobalFunction;
 
     template <typename... Args>
 #ifndef NOERR
@@ -71,7 +70,7 @@ namespace Brewer
             }
     }
 
-    template <typename T = NamedValue>
+    template <typename T = Value>
     T* Find(const std::vector<T*>& values, Type* type, const std::string& name)
     {
         for (const auto& value : values)
@@ -84,7 +83,7 @@ namespace Brewer
         return {};
     }
 
-    template <typename T = NamedValue>
+    template <typename T = Value>
     T* Find(const std::vector<T*>& values, const std::string& name)
     {
         for (const auto& value : values)
@@ -93,7 +92,7 @@ namespace Brewer
         return {};
     }
 
-    template <typename T = NamedValue>
+    template <typename T = Value>
     T* Erase(std::vector<T*>& values, const std::string& name)
     {
         for (auto it = values.begin(); it != values.end(); ++it)

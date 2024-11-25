@@ -2,14 +2,11 @@
 #include <Brewer/Module.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Printer/X86Printer.hpp>
-#include <Brewer/Value/Argument.hpp>
-#include <Brewer/Value/Block.hpp>
 #include <Brewer/Value/Constant.hpp>
-#include <Brewer/Value/Function.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
-#include <Brewer/Value/GlobalVariable.hpp>
-#include <Brewer/Value/Instruction.hpp>
 #include <Brewer/Value/Value.hpp>
+
+#include "Brewer/Value/NamedValue.hpp"
 
 static std::string to_string(const Brewer::X86Printer::Register reg, const unsigned bytes)
 {
@@ -86,15 +83,28 @@ static std::string to_string(const Brewer::X86Printer::Register reg, const unsig
         return res;
     }
 
-    return ex_regs[reg];
+    std::string res = ex_regs[reg];
+    switch (bytes)
+    {
+    case 0:
+    case 1:
+        res = res + 'b';
+        break;
+    case 2:
+        res = res + 'w';
+        break;
+    case 4:
+        res = res + 'd';
+        break;
+    default: break;
+    }
+    return res;
 }
 
 static std::vector call_registers
 {
-    Brewer::X86Printer::RDI,
-    Brewer::X86Printer::RSI,
-    Brewer::X86Printer::RDX,
     Brewer::X86Printer::RCX,
+    Brewer::X86Printer::RDX,
     Brewer::X86Printer::R8,
     Brewer::X86Printer::R9,
 };
@@ -106,6 +116,7 @@ Brewer::X86Printer::X86Printer(std::ostream& stream)
 
 void Brewer::X86Printer::Print(Module* module)
 {
+    S() << ".file \"" << module->GetFilename() << '"' << std::endl;
     module->ForEach([&](GlobalValue* value)
     {
         Print(value);
@@ -114,9 +125,13 @@ void Brewer::X86Printer::Print(Module* module)
 
 void Brewer::X86Printer::Print(Value* value)
 {
+    if (const auto ptr = dynamic_cast<FunctionBlock*>(value))
+        return Print(ptr);
     if (const auto ptr = dynamic_cast<Constant*>(value))
         return Print(ptr);
-    if (const auto ptr = dynamic_cast<NamedValue*>(value))
+    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
+        return Print(ptr);
+    if (const auto ptr = dynamic_cast<Instruction*>(value))
         return Print(ptr);
 
     Error("X86Printer::Print(Value*) not implemented: {}", value);
@@ -221,8 +236,53 @@ void Brewer::X86Printer::imul(Value* src, const Register dst)
         {4, "imull"},
         {8, "imulq"},
     };
-    auto bytes = src->GetType()->CountBytes();
+    const auto bytes = src->GetType()->CountBytes();
     S() << imul[bytes] << ' ';
+    PrintOperand(src);
+    S() << ", %" << to_string(dst, bytes) << std::endl;
+}
+
+void Brewer::X86Printer::cmp(Value* l_src, Value* r_src)
+{
+    static std::map<unsigned, std::string> cmp
+    {
+        {1, "cmpb"},
+        {2, "cmpw"},
+        {4, "cmpl"},
+        {8, "cmpq"},
+    };
+    const auto bytes = l_src->GetType()->CountBytes();
+    mov(l_src, RAX);
+    mov(r_src, RBX);
+    S() << cmp[bytes] << " %" << to_string(RAX, bytes) << ", %" << to_string(RBX, bytes) << std::endl;
+}
+
+void Brewer::X86Printer::add(Value* src, const Register dst)
+{
+    static std::map<unsigned, std::string> add
+    {
+        {1, "addb"},
+        {2, "addw"},
+        {4, "addl"},
+        {8, "addq"},
+    };
+    const auto bytes = src->GetType()->CountBytes();
+    S() << add[bytes] << ' ';
+    PrintOperand(src);
+    S() << ", %" << to_string(dst, bytes) << std::endl;
+}
+
+void Brewer::X86Printer::sub(Value* src, Register dst)
+{
+    static std::map<unsigned, std::string> sub
+    {
+        {1, "subb"},
+        {2, "subw"},
+        {4, "subl"},
+        {8, "subq"},
+    };
+    const auto bytes = src->GetType()->CountBytes();
+    S() << sub[bytes] << ' ';
     PrintOperand(src);
     S() << ", %" << to_string(dst, bytes) << std::endl;
 }
@@ -233,11 +293,11 @@ void Brewer::X86Printer::BeginFrame()
     m_Top = 0;
 }
 
-unsigned Brewer::X86Printer::GetOffset(NamedValue* value)
+unsigned Brewer::X86Printer::GetOffset(Value* value)
 {
     if (m_Offsets.contains(value))
         return m_Offsets[value];
-    auto result = m_Offsets[value] = m_Top;
+    const auto result = m_Offsets[value] = m_Top;
     m_Top += value->GetType()->CountBytes();
     return result;
 }
@@ -320,33 +380,21 @@ void Brewer::X86Printer::Print(ConstantArray* value)
 {
     S() << ".section .rodata" << std::endl;
     S() << ".LC" << value->GetIndex() << ": ";
-    Print(value->GetType<ArrayType>()->GetElementType());
+    Print(value->GetType()->GetElementType());
     S() << ' ';
-    for (unsigned i = 0; i < value->GetNumElements(); ++i)
+    for (unsigned i = 0; i < value->GetNumVals(); ++i)
     {
         if (i > 0) S() << ", ";
-        PrintGlobalOperand(value->GetElement(i));
+        PrintGlobalOperand(value->GetVal(i));
     }
     S() << std::endl;
-}
-
-void Brewer::X86Printer::Print(NamedValue* value)
-{
-    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
-        return Print(ptr);
-    if (const auto ptr = dynamic_cast<Block*>(value))
-        return Print(ptr);
-    if (const auto ptr = dynamic_cast<Instruction*>(value))
-        return Print(ptr);
-
-    Error("X86Printer::Print(NamedValue*) not implemented: {}", value);
 }
 
 void Brewer::X86Printer::Print(GlobalValue* value)
 {
     if (const auto ptr = dynamic_cast<GlobalVariable*>(value))
         return Print(ptr);
-    if (const auto ptr = dynamic_cast<Function*>(value))
+    if (const auto ptr = dynamic_cast<GlobalFunction*>(value))
         return Print(ptr);
 
     Error("X86Printer::Print(GlobalValue*) not implemented: {}", value);
@@ -357,51 +405,41 @@ void Brewer::X86Printer::Print(GlobalVariable* value)
     S() << ".section .data" << std::endl;
     switch (value->GetLinkage())
     {
-    case GlobalValue::ExternLinkage:
+    case GlobalValue::Linkage_Global:
         S() << ".global " << value->GetName() << std::endl;
         break;
-    case GlobalValue::WeakLinkage:
+    case GlobalValue::Linkage_Weak:
         S() << ".weak " << value->GetName() << std::endl;
         break;
-
-    case GlobalValue::NoLinkage:
-    case GlobalValue::InternLinkage:
-    case GlobalValue::CommonLinkage:
-    case GlobalValue::TentativeLinkage:
     default: break;
     }
 
-    if (!value->GetInitializer())
+    if (!value->GetInit())
     {
         S() << ".extern " << value->GetName() << std::endl;
         return;
     }
 
     S() << value->GetName() << ": ";
-    Print(value->GetInitializer()->GetType());
+    Print(value->GetInit()->GetType());
     S() << ' ';
-    PrintGlobalOperand(value->GetInitializer());
+    PrintGlobalOperand(value->GetInit());
     S() << std::endl;
 
-    Print(value->GetInitializer());
+    Print(value->GetInit());
 }
 
-void Brewer::X86Printer::Print(Function* value)
+void Brewer::X86Printer::Print(GlobalFunction* value)
 {
     S() << ".section .text" << std::endl;
     switch (value->GetLinkage())
     {
-    case GlobalValue::ExternLinkage:
+    case GlobalValue::Linkage_Global:
         S() << ".global " << value->GetName() << std::endl;
         break;
-    case GlobalValue::WeakLinkage:
+    case GlobalValue::Linkage_Weak:
         S() << ".weak " << value->GetName() << std::endl;
         break;
-
-    case GlobalValue::NoLinkage:
-    case GlobalValue::InternLinkage:
-    case GlobalValue::CommonLinkage:
-    case GlobalValue::TentativeLinkage:
     default: break;
     }
 
@@ -415,11 +453,11 @@ void Brewer::X86Printer::Print(Function* value)
 
     S() << "pushq %rbp" << std::endl;
     S() << "movq %rsp, %rbp" << std::endl;
-    S() << "subq $" << value->CountArgBytes() + value->CountNamedValueBytes() << ", %rsp" << std::endl;
+    S() << "subq $" << value->GetByteAlloc() << ", %rsp" << std::endl;
 
-    for (unsigned i = 0; i < value->GetNumArguments(); ++i)
+    for (unsigned i = 0; i < value->GetNumArgs(); ++i)
     {
-        const auto arg = value->GetArgument(i);
+        const auto arg = value->GetArg(i);
         const auto offset = GetOffset(arg);
         if (i < call_registers.size())
             mov(call_registers[i], RBP, -offset, arg->GetType()->CountBytes());
@@ -429,7 +467,7 @@ void Brewer::X86Printer::Print(Function* value)
         Print(value->GetBlock(i));
 }
 
-void Brewer::X86Printer::Print(Block* value)
+void Brewer::X86Printer::Print(FunctionBlock* value)
 {
     S() << ".L" << value->GetIndex() << ':' << std::endl;
     for (unsigned i = 0; i < value->GetNumValues(); ++i)
@@ -440,10 +478,34 @@ void Brewer::X86Printer::Print(Instruction* value)
 {
     switch (value->GetCode())
     {
+    case Instruction::Add:
+        {
+            const auto l_src = value->GetOperand(0);
+            const auto r_src = value->GetOperand(1);
+
+            mov(l_src, RAX);
+            add(r_src, RAX);
+
+            if (value->GetType())
+                mov(RAX, RBP, -GetOffset(value), value->GetType()->CountBytes());
+        }
+        return;
+    case Instruction::Sub:
+        {
+            const auto l_src = value->GetOperand(0);
+            const auto r_src = value->GetOperand(1);
+
+            mov(l_src, RAX);
+            sub(r_src, RAX);
+
+            if (value->GetType())
+                mov(RAX, RBP, -GetOffset(value), value->GetType()->CountBytes());
+        }
+        return;
     case Instruction::Call:
         {
             const auto callee = value->GetOperand(0);
-            const auto args = value->GetSubOperands(1);
+            const auto args = value->GetOperandRange(1);
 
             for (unsigned i = 0; i < args.size() && i < call_registers.size(); ++i)
                 mov(args[i], call_registers[i]);
@@ -451,15 +513,18 @@ void Brewer::X86Printer::Print(Instruction* value)
                 push(args[i - 1]);
 
             call(callee);
+
+            if (value->GetType())
+                mov(RAX, RBP, -GetOffset(value), value->GetType()->CountBytes());
         }
         return;
-    case Instruction::GEP:
+    case Instruction::Gep:
         {
             const auto base = value->GetOperand(0);
             auto type = base->GetType();
             lea(base, RAX);
 
-            const auto indices = value->GetSubOperands(1);
+            const auto indices = value->GetOperandRange(1);
             for (unsigned i = 0; i < indices.size(); ++i)
             {
                 const auto index = indices[i];
@@ -477,6 +542,9 @@ void Brewer::X86Printer::Print(Instruction* value)
                 if (i < indices.size() - 1)
                     S() << "movq (%rax), %rax" << std::endl;
             }
+
+            if (value->GetType())
+                mov(RAX, RBP, -GetOffset(value), value->GetType()->CountBytes());
         }
         return;
     case Instruction::Ret:
@@ -491,18 +559,25 @@ void Brewer::X86Printer::Print(Instruction* value)
         return;
     case Instruction::Br:
         {
-            if (value->GetNumOperands() == 1)
-            {
-                const auto dst = value->GetOperand(0);
-                S() << "jmp ";
-                PrintCallee(dst);
-            }
-            else
-            {
-                const auto condition = value->GetOperand(0);
-                const auto then_dst = value->GetOperand(1);
-                const auto else_dst = value->GetOperand(2);
-            }
+            const auto dst = value->GetOperand(0);
+            S() << "jmp ";
+            PrintCallee(dst);
+            S() << std::endl;
+        }
+        return;
+    case Instruction::Br_Lt:
+        {
+            const auto l_src = value->GetOperand(0);
+            const auto r_src = value->GetOperand(1);
+            const auto then_dst = value->GetOperand(2);
+            const auto else_dst = value->GetOperand(3);
+            cmp(l_src, r_src);
+            S() << "jl ";
+            PrintCallee(then_dst);
+            S() << std::endl;
+            S() << "jmp ";
+            PrintCallee(else_dst);
+            S() << std::endl;
         }
         return;
 
@@ -544,15 +619,17 @@ void Brewer::X86Printer::PrintOperand(Value* value)
 {
     if (const auto ptr = dynamic_cast<Constant*>(value))
         return PrintOperand(ptr);
-    if (const auto ptr = dynamic_cast<NamedValue*>(value))
+    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
         return PrintOperand(ptr);
 
-    Error("X86Printer::PrintOperand(Value*) not implemented: {}", value);
+    S() << '-' << GetOffset(value) << "(%rbp)";
 }
 
 void Brewer::X86Printer::PrintOperand(Constant* value)
 {
     if (const auto ptr = dynamic_cast<ConstantInt*>(value))
+        return PrintOperand(ptr);
+    if (const auto ptr = dynamic_cast<ConstantFloat*>(value))
         return PrintOperand(ptr);
 
     Error("X86Printer::PrintOperand(Constant*) not implemented: {}", value);
@@ -563,12 +640,9 @@ void Brewer::X86Printer::PrintOperand(ConstantInt* value)
     S() << '$' << value->GetVal();
 }
 
-void Brewer::X86Printer::PrintOperand(NamedValue* value)
+void Brewer::X86Printer::PrintOperand(ConstantFloat* value)
 {
-    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
-        return PrintOperand(ptr);
-
-    S() << '-' << GetOffset(value) << "(%rbp)";
+    Error("X86Printer::PrintOperand(ConstantFloat*) not implemented: {}", value);
 }
 
 void Brewer::X86Printer::PrintOperand(GlobalValue* value)
@@ -586,29 +660,28 @@ void Brewer::X86Printer::PrintOperand(GlobalVariable* value)
 
 void Brewer::X86Printer::PrintCallee(Value* value)
 {
-    if (const auto ptr = dynamic_cast<NamedValue*>(value))
+    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
+        return PrintCallee(ptr);
+    if (const auto ptr = dynamic_cast<FunctionBlock*>(value))
         return PrintCallee(ptr);
 
     Error("X86Printer::PrintCallee(Value*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintCallee(NamedValue* value)
-{
-    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
-        return PrintCallee(ptr);
-
-    Error("X86Printer::PrintCallee(NamedValue*) not implemented: {}", value);
-}
-
 void Brewer::X86Printer::PrintCallee(GlobalValue* value)
 {
-    if (const auto ptr = dynamic_cast<Function*>(value))
+    if (const auto ptr = dynamic_cast<GlobalFunction*>(value))
         return PrintCallee(ptr);
 
     Error("X86Printer::PrintCallee(GlobalValue*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintCallee(Function* value)
+void Brewer::X86Printer::PrintCallee(GlobalFunction* value)
 {
     S() << value->GetName();
+}
+
+void Brewer::X86Printer::PrintCallee(FunctionBlock* value)
+{
+    S() << ".L" << value->GetIndex();
 }

@@ -27,39 +27,39 @@ Brewer::Token& Brewer::Parser::NextToken()
 {
     enum State
     {
-        NoState,
-        CommentState,
-        IdState,
-        IntState,
-        FloatState,
-        StringState,
+        State_None,
+        State_Comment,
+        State_Id,
+        State_Int,
+        State_Float,
+        State_String,
     };
 
-    auto state = NoState;
+    auto state = State_None;
     int base = 0;
     std::string value;
-    TokenType type;
+    TokenType type = TokenType_Eof;
 
     while (m_Tok >= 0)
     {
         switch (state)
         {
-        case NoState:
+        case State_None:
             switch (m_Tok)
             {
             case ';':
-                state = CommentState;
+                state = State_Comment;
                 break;
 
             case '@':
-                state = IdState;
-                type = GlobalToken;
+                state = State_Id;
+                type = TokenType_GlobalId;
                 Get();
                 break;
 
             case '%':
-                state = IdState;
-                type = LocalToken;
+                state = State_Id;
+                type = TokenType_LocalId;
                 Get();
                 break;
 
@@ -69,26 +69,26 @@ Brewer::Token& Brewer::Parser::NextToken()
                 {
                 case 'b':
                 case 'B':
-                    state = IntState;
+                    state = State_Int;
                     base = 2;
                     Get();
                     break;
 
                 case 'x':
                 case 'X':
-                    state = IntState;
+                    state = State_Int;
                     base = 16;
                     Get();
                     break;
 
                 case '.':
-                    state = FloatState;
+                    state = State_Float;
                     value = "0.";
                     Get();
                     break;
 
                 default:
-                    state = IntState;
+                    state = State_Int;
                     value = "0";
                     base = 8;
                     break;
@@ -96,7 +96,7 @@ Brewer::Token& Brewer::Parser::NextToken()
                 break;
 
             case '"':
-                state = StringState;
+                state = State_String;
                 Get();
                 break;
 
@@ -112,19 +112,19 @@ Brewer::Token& Brewer::Parser::NextToken()
             case '=':
                 value += static_cast<char>(m_Tok);
                 Get();
-                return m_Token = {OtherToken, value};
+                return m_Token = {TokenType_Other, std::move(value)};
 
             default:
                 if (is_digit(m_Tok, 10))
                 {
-                    state = IntState;
+                    state = State_Int;
                     base = 10;
                     break;
                 }
                 if (is_id(m_Tok))
                 {
-                    state = IdState;
-                    type = IdToken;
+                    state = State_Id;
+                    type = TokenType_Id;
                     break;
                 }
                 Get();
@@ -132,34 +132,37 @@ Brewer::Token& Brewer::Parser::NextToken()
             }
             break;
 
-        case CommentState:
+        case State_Comment:
             if (m_Tok == '\n')
-                state = NoState;
+                state = State_None;
             Get();
             break;
 
-        case IdState:
+        case State_Id:
             if (!is_id(m_Tok))
-                return m_Token = {type, value};
+                return m_Token = {type, std::move(value)};
             value += static_cast<char>(m_Tok);
             Get();
             break;
 
-        case IntState:
+        case State_Int:
             if (base == 10 && m_Tok == '.')
             {
-                state = FloatState;
+                state = State_Float;
                 value += static_cast<char>(m_Tok);
                 Get();
                 break;
             }
             if (!is_digit(m_Tok, base))
-                return m_Token = {IntToken, value, to_int(value, base)};
+            {
+                const auto int_value = to_int(value, base);
+                return m_Token = {TokenType_Int, std::move(value), int_value};
+            }
             value += static_cast<char>(m_Tok);
             Get();
             break;
 
-        case FloatState:
+        case State_Float:
             if (m_Tok == 'e' || m_Tok == 'E')
             {
                 value += static_cast<char>(m_Tok);
@@ -171,16 +174,19 @@ Brewer::Token& Brewer::Parser::NextToken()
                 }
             }
             if (!is_digit(m_Tok, 10))
-                return m_Token = {FloatToken, value, 0, std::stod(value)};
+            {
+                const auto float_value = std::stod(value);
+                return m_Token = {TokenType_Float, std::move(value), 0, float_value};
+            }
             value += static_cast<char>(m_Tok);
             Get();
             break;
 
-        case StringState:
+        case State_String:
             if (m_Tok == '"')
             {
                 Get();
-                return m_Token = {StringToken, value};
+                return m_Token = {TokenType_String, std::move(value)};
             }
             if (m_Tok == '\\')
             {

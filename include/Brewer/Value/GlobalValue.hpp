@@ -7,47 +7,57 @@ namespace Brewer
     class GlobalValue : public NamedValue
     {
     public:
-        enum LinkageType
+        enum Linkage
         {
-            /**
-             * not visible outside its declaring block/function
-             */
-            NoLinkage,
-            /**
-             * resolved by linker across all modules
-             */
-            ExternLinkage,
-            /**
-             * local to its declaring module
-             */
-            InternLinkage,
-            /**
-             * overridden by strong symbols, if present
-             */
-            WeakLinkage,
-            /**
-             * resolved to a single allocation
-             */
-            CommonLinkage,
-            /**
-             * resolved to a single definition
-             */
-            TentativeLinkage,
+            Linkage_Local,
+            Linkage_Weak,
+            Linkage_Global,
         };
 
-        GlobalValue(Type* element_type, std::string name, LinkageType linkage);
+        GlobalValue(Type* type, std::string name, Linkage linkage);
 
-        std::ostream& PrintIR(std::ostream& os) const override;
-        std::ostream& PrintIROperand(std::ostream& os) const override;
+        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
-        [[nodiscard]] LinkageType GetLinkage() const;
+        Linkage GetLinkage() const;
 
     private:
-        LinkageType m_Linkage;
+        Linkage m_Linkage;
     };
 
-    GlobalValue::LinkageType ToLinkage(const std::string& name);
-    std::string ToString(GlobalValue::LinkageType linkage);
+    class GlobalVariable : public GlobalValue
+    {
+    public:
+        GlobalVariable(Type* type, std::string name, Linkage linkage, Constant* init);
 
-    std::ostream& operator<<(std::ostream& os, GlobalValue::LinkageType linkage);
+        Constant* GetInit() const;
+
+    private:
+        Constant* m_Init;
+    };
+
+    class GlobalFunction : public GlobalValue
+    {
+    public:
+        GlobalFunction(FunctionType* type, std::string name, Linkage linkage, std::vector<FunctionArg*> args);
+
+        FunctionArg* GetArg(unsigned i) const;
+        unsigned GetNumArgs() const;
+        FunctionBlock* GetBlock(unsigned i) const;
+        unsigned GetNumBlocks() const;
+
+        bool IsEmpty() const;
+        unsigned GetByteAlloc() const;
+
+        void Append(Value* value);
+
+        NamedValue* Get(Type* type, const std::string& name);
+
+    private:
+        std::vector<FunctionArg*> m_Args;
+        std::vector<FunctionBlock*> m_Blocks;
+
+        std::vector<NamedValue*> m_Unresolved;
+    };
+
+    GlobalValue::Linkage ToLinkage(const std::string& str);
 }

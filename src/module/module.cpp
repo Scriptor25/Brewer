@@ -3,14 +3,19 @@
 #include <Brewer/Printer/Printer.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::Module::Module(Context& context)
-    : m_Context(context)
+Brewer::Module::Module(Context& context, const std::string& filename)
+    : m_Context(context), m_Filename(filename)
 {
 }
 
 Brewer::Context& Brewer::Module::GetContext() const
 {
     return m_Context;
+}
+
+std::string Brewer::Module::GetFilename() const
+{
+    return m_Filename;
 }
 
 void Brewer::Module::Print(Printer* printer)
@@ -31,26 +36,26 @@ std::ostream& Brewer::Module::PrintIR(std::ostream& os) const
     return os;
 }
 
-Brewer::GlobalValue* Brewer::Module::GetGlobalValue(Type* type, const std::string& name)
+void Brewer::Module::Append(GlobalValue* value)
+{
+    if (const auto old_value = Find(m_SymbolTable, value->GetName()))
+    {
+        Replace(m_SymbolTable, old_value, value);
+        old_value->ReplaceWith(value);
+        return;
+    }
+
+    m_SymbolTable.push_back(value);
+}
+
+Brewer::GlobalValue* Brewer::Module::Get(PointerType* type, const std::string& name)
 {
     if (const auto global = Find(m_SymbolTable, type, name))
         return global;
 
-    const auto global = new GlobalValue(dynamic_cast<PointerType*>(type)->GetElementType(), name, GlobalValue::NoLinkage);
+    const auto global = new GlobalValue(type->GetElementType(), name, GlobalValue::Linkage_Local);
     m_SymbolTable.push_back(global);
     return global;
-}
-
-void Brewer::Module::SetGlobalValue(const std::string& name, GlobalValue* new_value)
-{
-    if (const auto old_value = Find(m_SymbolTable, name))
-    {
-        Replace(m_SymbolTable, old_value, new_value);
-        old_value->ReplaceAllUses(new_value);
-        return;
-    }
-
-    m_SymbolTable.push_back(new_value);
 }
 
 void Brewer::Module::ForEach(const std::function<void(GlobalValue*)>& consumer) const

@@ -8,14 +8,17 @@
 
 int main()
 {
-    Brewer::Context context;
-    Brewer::Module module(context);
+    constexpr auto input = "example/example.b";
+    constexpr auto output = "example/example.s";
 
-    std::ifstream is("example/example.b");
+    Brewer::Context context;
+    Brewer::Module module(context, input);
+
+    std::ifstream is(input);
     Brewer::Parser::Parse(is, module);
     is.close();
 
-    std::ofstream os("example/example.s");
+    std::ofstream os(output);
     Brewer::X86Printer printer(os);
     module.Print(&printer);
     os.close();

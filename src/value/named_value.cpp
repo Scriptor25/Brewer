@@ -1,4 +1,3 @@
-#include <iostream>
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/NamedValue.hpp>
 
@@ -7,19 +6,13 @@ Brewer::NamedValue::NamedValue(Type* type, std::string name)
 {
 }
 
-std::ostream& Brewer::NamedValue::PrintIR(std::ostream& os) const
+std::ostream& Brewer::NamedValue::PrintOperandIR(std::ostream& os, const bool omit_type) const
 {
-    return PrintIROperand(os);
+    if (!omit_type) GetType()->Print(os) << ' ';
+    return os << '%' << GetName();
 }
 
-std::ostream& Brewer::NamedValue::PrintIROperand(std::ostream& os) const
-{
-    if (!GetType() && m_Name.empty())
-        return os << "<null>";
-    return GetType()->Print(os) << " %" << m_Name;
-}
-
-const std::string& Brewer::NamedValue::GetName() const
+std::string Brewer::NamedValue::GetName() const
 {
     return m_Name;
 }

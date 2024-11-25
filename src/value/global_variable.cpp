@@ -1,19 +1,11 @@
-#include <utility>
-#include <Brewer/Type.hpp>
-#include <Brewer/Value/Constant.hpp>
-#include <Brewer/Value/GlobalVariable.hpp>
+#include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::GlobalVariable::GlobalVariable(Type* type, std::string name, const LinkageType linkage, Constant* initializer)
-    : GlobalValue(type, std::move(name), linkage), m_Initializer(initializer)
+Brewer::GlobalVariable::GlobalVariable(Type* type, std::string name, const Linkage linkage, Constant* init)
+    : GlobalValue(type, std::move(name), linkage), m_Init(init)
 {
 }
 
-std::ostream& Brewer::GlobalVariable::PrintIR(std::ostream& os) const
+Brewer::Constant* Brewer::GlobalVariable::GetInit() const
 {
-    return m_Initializer->PrintIROperand(os << "global " << GetLinkage() << " @" << GetName() << " = ");
-}
-
-Brewer::Constant* Brewer::GlobalVariable::GetInitializer() const
-{
-    return m_Initializer;
+    return m_Init;
 }

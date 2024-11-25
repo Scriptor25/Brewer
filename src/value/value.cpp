@@ -1,5 +1,3 @@
-#include <iostream>
-#include <Brewer/Printer/Printer.hpp>
 #include <Brewer/Value/Value.hpp>
 
 static unsigned INDEX = 0;
@@ -9,50 +7,39 @@ Brewer::Value::Value(Type* type)
 {
 }
 
-Brewer::Value::~Value()
-{
-    --INDEX;
-}
-
 unsigned Brewer::Value::GetIndex() const
 {
     return m_Index;
 }
 
-std::ostream& Brewer::Value::PrintUseList(std::ostream& os) const
+Brewer::Type* Brewer::Value::GetType() const
 {
-    if (m_UseList.empty())
-        return os << "; no uses";
-    os << "; ";
-    for (unsigned i = 0; i < m_UseList.size(); ++i)
-    {
-        if (i > 0) os << ", ";
-        m_UseList[i]->PrintIROperand(os);
-    }
-    return os;
+    return m_Type;
 }
 
-void Brewer::Value::Print(Printer* printer)
+void Brewer::Value::AddUse(Value* user)
 {
-    printer->Print(this);
+    m_UseList.push_back(user);
 }
 
-void Brewer::Value::AddUse(Value* use)
-{
-    m_UseList.push_back(use);
-}
-
-void Brewer::Value::ReplaceAllUses(Value* new_value)
+void Brewer::Value::ReplaceWith(Value* new_value)
 {
     for (const auto& use : m_UseList)
-    {
-        use->ReplaceUseOf(this, new_value);
-        new_value->AddUse(use);
-    }
+        use->Replace(this, new_value);
+    m_UseList.clear();
     delete this;
 }
 
-void Brewer::Value::ReplaceUseOf(Value* old_value, Value* new_value)
+Brewer::Value::~Value()
 {
-    Error("this does not use anything");
+    --INDEX;
+}
+
+void Brewer::Value::Replace(Value* old_value, Value* new_value) const
+{
+}
+
+std::ostream& Brewer::Value::PrintIR(std::ostream& os) const
+{
+    return PrintOperandIR(os, false);
 }

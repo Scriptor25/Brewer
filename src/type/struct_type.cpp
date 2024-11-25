@@ -14,6 +14,16 @@ Brewer::StructType::StructType(Context& context, const unsigned hash, std::vecto
 {
 }
 
+Brewer::Type* Brewer::StructType::GetElementType(unsigned i) const
+{
+    return m_ElementTypes[i];
+}
+
+unsigned Brewer::StructType::GetNumElements() const
+{
+    return m_ElementTypes.size();
+}
+
 std::ostream& Brewer::StructType::Print(std::ostream& os) const
 {
     os << "{ ";
@@ -31,9 +41,4 @@ unsigned Brewer::StructType::CountBytes() const
     for (const auto& ty : m_ElementTypes)
         bytes += ty->CountBytes();
     return bytes;
-}
-
-unsigned Brewer::StructType::GetNumElements() const
-{
-    return m_ElementTypes.size();
 }

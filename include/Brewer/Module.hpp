@@ -10,21 +10,22 @@ namespace Brewer
     class Module
     {
     public:
-        explicit Module(Context& context);
+        Module(Context& context, const std::string& filename);
 
         [[nodiscard]] Context& GetContext() const;
+        std::string GetFilename() const;
 
         void Print(Printer* printer);
         std::ostream& PrintIR(std::ostream& os) const;
 
-        GlobalValue* GetGlobalValue(Type* type, const std::string& name);
-        void SetGlobalValue(const std::string& name, GlobalValue* new_value);
+        void Append(GlobalValue* value);
+        GlobalValue* Get(PointerType* type, const std::string& name);
 
         void ForEach(const std::function<void(GlobalValue*)>& consumer) const;
 
     private:
         Context& m_Context;
-
+        std::string m_Filename;
         std::vector<GlobalValue*> m_SymbolTable;
     };
 }
