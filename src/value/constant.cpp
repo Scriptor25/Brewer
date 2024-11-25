@@ -52,7 +52,7 @@ std::ostream& Brewer::ConstantArray::PrintIROperand(std::ostream& os) const
 {
     GetType()->Print(os) << ' ';
 
-    if (GetType<ArrayType>()->GetElementType<IntType>()->Bits() == 8)
+    if (GetType<ArrayType>()->GetElementType<IntType>()->GetBits() == 8)
     {
         os << '"';
         for (const auto& element : m_Elements)

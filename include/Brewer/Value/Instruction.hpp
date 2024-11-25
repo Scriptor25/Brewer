@@ -10,16 +10,14 @@ namespace Brewer
     public:
         enum Code
         {
-            ICmpLT,
-            ICmpLE,
             IAdd,
             ISub,
-            PtrCast,
             Call,
             GEP,
             PHI,
             Ret,
             Br,
+            Br_LT,
         };
 
         Instruction(Type* type, std::string name, Code code, std::vector<Value*> operands);

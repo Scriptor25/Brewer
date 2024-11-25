@@ -20,7 +20,7 @@ unsigned Brewer::IntType::CountBytes() const
     return m_Bits / 8;
 }
 
-unsigned Brewer::IntType::Bits() const
+unsigned Brewer::IntType::GetBits() const
 {
     return m_Bits;
 }

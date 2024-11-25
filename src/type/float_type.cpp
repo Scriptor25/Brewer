@@ -19,3 +19,8 @@ unsigned Brewer::FloatType::CountBytes() const
 {
     return m_Bits / 8;
 }
+
+unsigned Brewer::FloatType::GetBits() const
+{
+    return m_Bits;
+}

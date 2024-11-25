@@ -61,7 +61,7 @@ namespace Brewer
         std::ostream& Print(std::ostream& os) const override;
         [[nodiscard]] unsigned CountBytes() const override;
 
-        [[nodiscard]] unsigned Bits() const;
+        [[nodiscard]] unsigned GetBits() const;
 
     private:
         unsigned m_Bits;
@@ -76,6 +76,8 @@ namespace Brewer
 
         std::ostream& Print(std::ostream& os) const override;
         [[nodiscard]] unsigned CountBytes() const override;
+
+        [[nodiscard]] unsigned GetBits() const;
 
     private:
         unsigned m_Bits;

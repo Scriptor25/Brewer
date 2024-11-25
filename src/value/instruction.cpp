@@ -62,16 +62,14 @@ Brewer::Instruction::Code Brewer::ToCode(const std::string& name)
 {
     static std::map<std::string, Instruction::Code> codes
     {
-        {"icmp.lt", Instruction::ICmpLT},
-        {"icmp.le", Instruction::ICmpLE},
         {"isub", Instruction::ISub},
         {"iadd", Instruction::IAdd},
-        {"ptrcast", Instruction::PtrCast},
         {"call", Instruction::Call},
         {"gep", Instruction::GEP},
         {"phi", Instruction::PHI},
         {"ret", Instruction::Ret},
         {"br", Instruction::Br},
+        {"br.lt", Instruction::Br_LT},
     };
 
     if (!codes.contains(name))
@@ -83,16 +81,14 @@ std::string Brewer::ToString(const Instruction::Code code)
 {
     static std::map<Instruction::Code, std::string> codes
     {
-        {Instruction::ICmpLT, "icmp.lt"},
-        {Instruction::ICmpLE, "icmp.le"},
         {Instruction::ISub, "isub"},
         {Instruction::IAdd, "iadd"},
-        {Instruction::PtrCast, "ptrcast"},
         {Instruction::Call, "call"},
         {Instruction::GEP, "gep"},
         {Instruction::PHI, "phi"},
         {Instruction::Ret, "ret"},
         {Instruction::Br, "br"},
+        {Instruction::Br_LT, "br.lt"},
     };
 
     if (!codes.contains(code))

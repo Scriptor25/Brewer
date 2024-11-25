@@ -31,7 +31,7 @@ Brewer::Constant* Brewer::Parser::ParseConstant(Type* type)
         const auto element_type = dynamic_cast<IntType*>(array_type->GetElementType());
         if (!element_type)
             Error("constant string type must have int element type");
-        if (element_type->Bits() != 8)
+        if (element_type->GetBits() != 8)
             Error("constant string element type must be of size 8 bits");
 
         std::vector<Constant*> elements(size);
