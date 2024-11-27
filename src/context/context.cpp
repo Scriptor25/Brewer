@@ -31,14 +31,14 @@ Brewer::ArrayType* Brewer::Context::GetArrayType(Type* element_type, const unsig
     return GetType<ArrayType>(element_type, size);
 }
 
-Brewer::StructType* Brewer::Context::GetStructType(const std::vector<Type*>& element_types)
+Brewer::StructType* Brewer::Context::GetStructType(std::vector<Type*>&& element_types)
 {
-    return GetType<StructType>(element_types);
+    return GetType<StructType>(std::move(element_types));
 }
 
 Brewer::FunctionType* Brewer::Context::GetFunctionType(
     Type* result_type,
-    const std::vector<Type*>& arg_types,
+    std::vector<Type*>&& arg_types,
     const bool vararg)
 {
     return GetType<FunctionType>(result_type, arg_types, vararg);
@@ -47,4 +47,11 @@ Brewer::FunctionType* Brewer::Context::GetFunctionType(
 Brewer::PointerType* Brewer::Context::GetStringType()
 {
     return GetPointerType(GetIntNType(8));
+}
+
+Brewer::Type* Brewer::Context::GlobalType(const std::string& name, Type* type)
+{
+    auto& ref = m_GlobalTypeMap[name];
+    if (ref) return ref;
+    return ref = type;
 }

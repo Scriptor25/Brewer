@@ -49,14 +49,12 @@ namespace Brewer
         bool Expect(const std::string& str);
 
         Type* ParseType();
+        void ParseGlobalType();
 
         Value* ParseValue(Type* type);
         Instruction* ParseInstruction(Type* type, const std::string& code_str);
 
-        NamedValue* ParseNamedValue();
         Assignment* ParseAssignment();
-        FunctionArg* ParseFunctionArg();
-        FunctionBlock* ParseFunctionBlock(const std::string& name);
 
         Constant* ParseConstant(Type* type);
         ConstantInt* ParseConstantInt(Type* type);

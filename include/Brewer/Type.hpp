@@ -18,6 +18,7 @@ namespace Brewer
 
         Context& GetContext() const;
         unsigned GetHash() const;
+        Type* GetBaseType();
 
         virtual ~Type() = default;
 
@@ -131,7 +132,9 @@ namespace Brewer
     public:
         static unsigned Hash(const std::vector<Type*>& element_types);
 
-        StructType(Context& context, unsigned hash, std::vector<Type*> element_types);
+        StructType(Context& context, unsigned hash, std::vector<Type*>&& element_types);
+
+        unsigned GetElementOffset(unsigned i) const;
 
         Type* GetElementType(unsigned i) const override;
         unsigned GetNumElements() const override;

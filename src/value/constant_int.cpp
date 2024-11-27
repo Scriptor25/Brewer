@@ -11,6 +11,11 @@ uint64_t Brewer::ConstantInt::GetVal() const
     return m_Val;
 }
 
+bool Brewer::ConstantInt::NotNull() const
+{
+    return m_Val;
+}
+
 std::ostream& Brewer::ConstantInt::PrintOperandIR(std::ostream& os, const bool omit_type) const
 {
     if (!omit_type) GetType()->Print(os) << ' ';

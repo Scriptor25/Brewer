@@ -20,6 +20,13 @@ unsigned Brewer::Type::GetHash() const
     return m_Hash;
 }
 
+Brewer::Type* Brewer::Type::GetBaseType()
+{
+    if (const auto element = GetElementType())
+        return element->GetBaseType();
+    return this;
+}
+
 unsigned Brewer::Type::GetBits() const
 {
     return 0;

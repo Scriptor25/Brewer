@@ -38,7 +38,7 @@ Brewer::GlobalFunction* Brewer::Parser::ParseGlobalFunction()
     }
     Expect(")");
 
-    const auto type = m_Dest.GetContext().GetFunctionType(result_type, arg_types, vararg);
+    const auto type = m_Dest.GetContext().GetFunctionType(result_type, std::move(arg_types), vararg);
     const auto function = new GlobalFunction(type, std::move(name), linkage, std::move(args));
 
     if (!NextAt("{"))

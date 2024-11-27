@@ -18,6 +18,7 @@ namespace Brewer
 
         uint64_t GetVal() const;
 
+        bool NotNull() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -31,6 +32,7 @@ namespace Brewer
 
         double GetVal() const;
 
+        bool NotNull() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -42,8 +44,10 @@ namespace Brewer
     public:
         ConstantArray(ArrayType* type, std::vector<Constant*> vals);
 
-        Constant* GetVal(unsigned i) const;
-        unsigned GetNumVals() const;
+        [[nodiscard]] Constant* GetVal(unsigned i) const;
+        [[nodiscard]] unsigned GetNumVals() const;
+
+        void Replace(Value* old_value, Value* new_value) override;
 
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 

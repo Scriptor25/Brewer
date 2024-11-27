@@ -2,6 +2,8 @@
 #include <Brewer/Printer/RiscVPrinter.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
+#include "Brewer/Printer/X86Printer.hpp"
+
 Brewer::RiscVPrinter::RiscVPrinter(std::ostream& stream)
     : Printer(stream)
 {

@@ -31,7 +31,7 @@ Brewer::Type* Brewer::Parser::ParseType()
         }
         Expect("}");
 
-        result_type = m_Dest.GetContext().GetStructType(element_types);
+        result_type = m_Dest.GetContext().GetStructType(std::move(element_types));
     }
     else if (At(TokenType_Id))
     {
@@ -46,6 +46,7 @@ Brewer::Type* Brewer::Parser::ParseType()
             const auto bits = std::stoi(name.substr(1));
             result_type = m_Dest.GetContext().GetFloatNType(bits);
         }
+        else result_type = m_Dest.GetContext().GlobalType(name);
     }
 
     if (!result_type)
@@ -73,7 +74,7 @@ Brewer::Type* Brewer::Parser::ParseType()
         }
         Expect(")");
 
-        result_type = m_Dest.GetContext().GetFunctionType(result_type, arg_types, vararg);
+        result_type = m_Dest.GetContext().GetFunctionType(result_type, std::move(arg_types), vararg);
     }
 
     return result_type;

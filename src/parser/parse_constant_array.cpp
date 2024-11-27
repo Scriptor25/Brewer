@@ -1,3 +1,5 @@
+#include <Brewer/Context.hpp>
+#include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/Constant.hpp>
@@ -29,6 +31,9 @@ Brewer::ConstantArray* Brewer::Parser::ParseConstantArray(Type* type)
         }
         Expect("]");
     }
+
+    if (array_type->GetNumElements() != vals.size())
+        Error("array size mismatch");
 
     return new ConstantArray(array_type, std::move(vals));
 }

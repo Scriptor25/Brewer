@@ -11,7 +11,7 @@ namespace Brewer
 
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
-        std::string GetName() const;
+        [[nodiscard]] std::string GetName() const;
 
     private:
         std::string m_Name;
@@ -28,10 +28,15 @@ namespace Brewer
     public:
         FunctionBlock(BlockType* type, std::string name);
 
-        Value* GetValue(unsigned i) const;
-        unsigned GetNumValues() const;
+        [[nodiscard]] Value* GetValue(unsigned i) const;
+        [[nodiscard]] unsigned GetNumValues() const;
 
         void Append(Value* value);
         NamedValue* Get(Type* type, const std::string& name) const;
+
+        void Replace(Value* old_value, Value* new_value) override;
+
+    private:
+        std::vector<Value*> m_Values;
     };
 }

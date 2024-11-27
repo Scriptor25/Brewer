@@ -10,14 +10,15 @@ namespace Brewer
     public:
         explicit Value(Type* type);
 
-        unsigned GetIndex() const;
-        Type* GetType() const;
+        [[nodiscard]] unsigned GetIndex() const;
+        [[nodiscard]] Type* GetType() const;
 
         void AddUse(Value* user);
         void ReplaceWith(Value* new_value);
 
         virtual ~Value();
-        virtual void Replace(Value* old_value, Value* new_value) const;
+        virtual bool NotNull() const;
+        virtual void Replace(Value* old_value, Value* new_value);
         virtual std::ostream& PrintIR(std::ostream& os) const;
         virtual std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const = 0;
 
@@ -32,6 +33,11 @@ namespace Brewer
     {
     public:
         Assignment(Value* dst, Value* src);
+
+        [[nodiscard]] Value* GetDst() const;
+        [[nodiscard]] Value* GetSrc() const;
+
+        void Replace(Value* old_value, Value* new_value) override;
 
         std::ostream& PrintIR(std::ostream& os) const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
@@ -53,6 +59,9 @@ namespace Brewer
 
             Call,
             Gep,
+            Load,
+            Store,
+            Alloca,
 
             Ret,
             Br,
@@ -63,10 +72,12 @@ namespace Brewer
 
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
-        Code GetCode() const;
-        Value* GetOperand(unsigned i) const;
-        unsigned GetNumOperands() const;
-        std::vector<Value*> GetOperandRange(unsigned beg, unsigned end = -1) const;
+        [[nodiscard]] Code GetCode() const;
+        [[nodiscard]] Value* GetOperand(unsigned i) const;
+        [[nodiscard]] unsigned GetNumOperands() const;
+        [[nodiscard]] std::vector<Value*> GetOperandRange(unsigned beg, unsigned end = -1) const;
+
+        void Replace(Value* old_value, Value* new_value) override;
 
     private:
         Code m_Code;

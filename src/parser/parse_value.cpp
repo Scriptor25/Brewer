@@ -1,3 +1,5 @@
+#include <Brewer/Context.hpp>
+#include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Value/Constant.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
@@ -9,7 +11,7 @@ Brewer::Value* Brewer::Parser::ParseValue(Type* type)
     {
         const auto name = Skip().Str;
         if (!type && NextAt(":"))
-            return ParseFunctionBlock(name);
+            return new FunctionBlock(m_Dest.GetContext().GetBlockType(), name);
         return ParseInstruction(type, name);
     }
     if (!At(TokenType_LocalId)) return ParseConstant(type);

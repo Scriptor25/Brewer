@@ -2,9 +2,10 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Printer/Printer.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
+#include <utility>
 
-Brewer::Module::Module(Context& context, const std::string& filename)
-    : m_Context(context), m_Filename(filename)
+Brewer::Module::Module(Context& context, std::string filename)
+    : m_Context(context), m_Filename(std::move(filename))
 {
 }
 

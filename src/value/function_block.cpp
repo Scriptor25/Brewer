@@ -6,21 +6,27 @@ Brewer::FunctionBlock::FunctionBlock(BlockType* type, std::string name)
 {
 }
 
-Brewer::Value* Brewer::FunctionBlock::GetValue(unsigned i) const
+Brewer::Value* Brewer::FunctionBlock::GetValue(const unsigned i) const
 {
-    return {};
+    return m_Values[i];
 }
 
 unsigned Brewer::FunctionBlock::GetNumValues() const
 {
-    return 0;
+    return m_Values.size();
 }
 
 void Brewer::FunctionBlock::Append(Value* value)
 {
+    m_Values.push_back(value);
 }
 
 Brewer::NamedValue* Brewer::FunctionBlock::Get(Type* type, const std::string& name) const
 {
-    return {};
+    return Find(m_Values, type, name);
+}
+
+void Brewer::FunctionBlock::Replace(Value* old_value, Value* new_value)
+{
+    Brewer::Replace(m_Values, old_value, new_value);
 }

@@ -18,7 +18,7 @@ namespace Brewer
 
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
-        Linkage GetLinkage() const;
+        [[nodiscard]] Linkage GetLinkage() const;
 
     private:
         Linkage m_Linkage;
@@ -29,7 +29,9 @@ namespace Brewer
     public:
         GlobalVariable(Type* type, std::string name, Linkage linkage, Constant* init);
 
-        Constant* GetInit() const;
+        [[nodiscard]] Constant* GetInit() const;
+
+        void Replace(Value* old_value, Value* new_value) override;
 
     private:
         Constant* m_Init;
@@ -40,23 +42,25 @@ namespace Brewer
     public:
         GlobalFunction(FunctionType* type, std::string name, Linkage linkage, std::vector<FunctionArg*> args);
 
-        FunctionArg* GetArg(unsigned i) const;
-        unsigned GetNumArgs() const;
-        FunctionBlock* GetBlock(unsigned i) const;
-        unsigned GetNumBlocks() const;
+        [[nodiscard]] FunctionArg* GetArg(unsigned i) const;
+        [[nodiscard]] unsigned GetNumArgs() const;
+        [[nodiscard]] FunctionBlock* GetBlock(unsigned i) const;
+        [[nodiscard]] unsigned GetNumBlocks() const;
 
-        bool IsEmpty() const;
-        unsigned GetByteAlloc() const;
+        [[nodiscard]] bool IsEmpty() const;
+        [[nodiscard]] unsigned GetByteAlloc() const;
 
         void Append(Value* value);
 
         NamedValue* Get(Type* type, const std::string& name);
 
+        void Replace(Value* old_value, Value* new_value) override;
+
     private:
         std::vector<FunctionArg*> m_Args;
+        std::vector<NamedValue*> m_Locals;
         std::vector<FunctionBlock*> m_Blocks;
-
-        std::vector<NamedValue*> m_Unresolved;
+        std::vector<FunctionBlock*> m_Unresolved;
     };
 
     GlobalValue::Linkage ToLinkage(const std::string& str);

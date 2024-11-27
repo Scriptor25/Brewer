@@ -35,11 +35,16 @@ Brewer::Value::~Value()
     --INDEX;
 }
 
-void Brewer::Value::Replace(Value* old_value, Value* new_value) const
+bool Brewer::Value::NotNull() const
+{
+    return true;
+}
+
+void Brewer::Value::Replace(Value* old_value, Value* new_value)
 {
 }
 
 std::ostream& Brewer::Value::PrintIR(std::ostream& os) const
 {
-    return PrintOperandIR(os, false);
+    return PrintOperandIR(os, !GetType());
 }

@@ -70,7 +70,7 @@ namespace Brewer
             }
     }
 
-    template <typename T = Value>
+    template <typename T = NamedValue>
     T* Find(const std::vector<T*>& values, Type* type, const std::string& name)
     {
         for (const auto& value : values)
@@ -83,7 +83,20 @@ namespace Brewer
         return {};
     }
 
-    template <typename T = Value>
+    template <typename T = NamedValue>
+    T* Find(const std::vector<Value*>& values, Type* type, const std::string& name)
+    {
+        for (const auto& value : values)
+            if (const auto named = dynamic_cast<T*>(value); named && named->GetName() == name)
+            {
+                if (named->GetType() != type)
+                    Error("type mismatch: {} != {}", named->GetType(), type);
+                return named;
+            }
+        return {};
+    }
+
+    template <typename T = NamedValue>
     T* Find(const std::vector<T*>& values, const std::string& name)
     {
         for (const auto& value : values)
@@ -92,7 +105,7 @@ namespace Brewer
         return {};
     }
 
-    template <typename T = Value>
+    template <typename T = NamedValue>
     T* Erase(std::vector<T*>& values, const std::string& name)
     {
         for (auto it = values.begin(); it != values.end(); ++it)

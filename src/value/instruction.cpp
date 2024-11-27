@@ -5,6 +5,8 @@
 Brewer::Instruction::Instruction(Type* type, const Code code, std::vector<Value*> operands)
     : Value(type), m_Code(code), m_Operands(std::move(operands))
 {
+    for (const auto& operand : m_Operands)
+        operand->AddUse(this);
 }
 
 std::ostream& Brewer::Instruction::PrintOperandIR(std::ostream& os, bool omit_type) const
@@ -42,6 +44,11 @@ std::vector<Brewer::Value*> Brewer::Instruction::GetOperandRange(unsigned beg, u
     return result;
 }
 
+void Brewer::Instruction::Replace(Value* old_value, Value* new_value)
+{
+    Brewer::Replace(m_Operands, old_value, new_value);
+}
+
 Brewer::Instruction::Code Brewer::ToCode(const std::string& str)
 {
     static std::map<std::string, Instruction::Code> map
@@ -50,6 +57,9 @@ Brewer::Instruction::Code Brewer::ToCode(const std::string& str)
         {"sub", Instruction::Sub},
         {"call", Instruction::Call},
         {"gep", Instruction::Gep},
+        {"load", Instruction::Load},
+        {"store", Instruction::Store},
+        {"alloca", Instruction::Alloca},
         {"ret", Instruction::Ret},
         {"br", Instruction::Br},
         {"br.lt", Instruction::Br_Lt},
@@ -67,6 +77,9 @@ std::string Brewer::ToString(const Instruction::Code code)
         {Instruction::Sub, "sub"},
         {Instruction::Call, "call"},
         {Instruction::Gep, "gep"},
+        {Instruction::Load, "load"},
+        {Instruction::Store, "store"},
+        {Instruction::Alloca, "alloca"},
         {Instruction::Ret, "ret"},
         {Instruction::Br, "br"},
         {Instruction::Br_Lt, "br.lt"},

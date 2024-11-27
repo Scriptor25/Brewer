@@ -10,10 +10,10 @@ namespace Brewer
     class Module
     {
     public:
-        Module(Context& context, const std::string& filename);
+        Module(Context& context, std::string filename);
 
         [[nodiscard]] Context& GetContext() const;
-        std::string GetFilename() const;
+        [[nodiscard]] std::string GetFilename() const;
 
         void Print(Printer* printer);
         std::ostream& PrintIR(std::ostream& os) const;

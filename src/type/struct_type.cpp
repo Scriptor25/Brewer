@@ -9,12 +9,20 @@ unsigned Brewer::StructType::Hash(const std::vector<Type*>& element_types)
     return hash;
 }
 
-Brewer::StructType::StructType(Context& context, const unsigned hash, std::vector<Type*> element_types)
+Brewer::StructType::StructType(Context& context, const unsigned hash, std::vector<Type*>&& element_types)
     : Type(context, hash), m_ElementTypes(std::move(element_types))
 {
 }
 
-Brewer::Type* Brewer::StructType::GetElementType(unsigned i) const
+unsigned Brewer::StructType::GetElementOffset(const unsigned i) const
+{
+    unsigned offset = 0;
+    for (unsigned n = 0; n < i; ++n)
+        offset += m_ElementTypes[n]->CountBytes();
+    return offset;
+}
+
+Brewer::Type* Brewer::StructType::GetElementType(const unsigned i) const
 {
     return m_ElementTypes[i];
 }

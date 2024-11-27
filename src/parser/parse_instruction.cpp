@@ -4,7 +4,7 @@
 Brewer::Instruction* Brewer::Parser::ParseInstruction(Type* type, const std::string& code_str)
 {
     const auto code = ToCode(code_str);
-    if (!code) Error("not a code");
+    if (!code) Error("not a code: '{}'", code_str);
     std::vector<Value*> operands;
     do operands.push_back(ParseOperand());
     while (NextAt(","));
