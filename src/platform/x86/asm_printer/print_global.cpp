@@ -73,15 +73,12 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
     default: break;
     }
 
-    S() << ".def " << value->GetName() << "; .scl 2; .type 32; .endef" << std::endl;
-
     if (value->IsEmpty())
     {
         S() << ".extern " << value->GetName() << std::endl;
         return;
     }
 
-    S() << ".seh_proc " << value->GetName() << std::endl;
     S() << value->GetName() << ':' << std::endl;
 
     BeginFrame();
@@ -90,9 +87,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
     const Storage rsp(RSP);
 
     asm_push(rbp, 8);
-    S() << ".seh_pushreg %rbp" << std::endl;
     asm_mov(rsp, rbp, 8);
-    S() << ".seh_setframe %rbp, 0" << std::endl;
 
     if (uint64_t bytes = value->GetNumAllocaBytes())
     {
@@ -103,11 +98,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
 
         const Storage imm(bytes);
         asm_sub(imm, rsp, 8);
-
-        S() << ".seh_stackalloc " << bytes << std::endl;
     }
-
-    S() << ".seh_endprologue" << std::endl;
 
     for (unsigned i = 0; i < value->GetNumArgs(); ++i)
     {
@@ -125,8 +116,6 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
 
     for (unsigned i = 0; i < value->GetNumBlocks(); ++i)
         PrintGlobal(value->GetBlock(i));
-
-    S() << ".seh_endproc" << std::endl;
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobal(FunctionBlock* value)
