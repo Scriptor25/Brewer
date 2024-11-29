@@ -1,8 +1,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/NamedValue.hpp>
 
-Brewer::NamedValue::NamedValue(Type* type, std::string name)
-    : Value(type), m_Name(std::move(name))
+Brewer::NamedValue::NamedValue(Type* type, std::string name, std::vector<std::string>&& meta)
+    : Value(type, std::move(meta)), m_Name(std::move(name))
 {
 }
 

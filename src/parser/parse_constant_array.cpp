@@ -1,4 +1,3 @@
-#include <Brewer/Context.hpp>
 #include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
 #include <Brewer/Type.hpp>
@@ -18,7 +17,7 @@ Brewer::ConstantArray* Brewer::Parser::ParseConstantArray(Type* type)
         if (!int_type)
             Error("not an integer type");
         for (const auto str = Skip().Str; const auto c : str)
-            vals.push_back(new ConstantInt(int_type, c));
+            vals.push_back(new ConstantInt(int_type, c, {}));
     }
     else
     {
@@ -35,5 +34,7 @@ Brewer::ConstantArray* Brewer::Parser::ParseConstantArray(Type* type)
     if (array_type->GetNumElements() != vals.size())
         Error("array size mismatch");
 
-    return new ConstantArray(array_type, std::move(vals));
+    std::vector<std::string> meta;
+    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+    return new ConstantArray(array_type, std::move(vals), std::move(meta));
 }

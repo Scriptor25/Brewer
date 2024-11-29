@@ -11,7 +11,11 @@ Brewer::Value* Brewer::Parser::ParseValue(Type* type)
     {
         const auto name = Skip().Str;
         if (!type && NextAt(":"))
-            return new FunctionBlock(m_Dest.GetContext().GetBlockType(), name);
+        {
+            std::vector<std::string> meta;
+            while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+            return new FunctionBlock(m_Dest.GetContext().GetBlockType(), name, std::move(meta));
+        }
         return ParseInstruction(type, name);
     }
     if (!At(TokenType_LocalId)) return ParseConstant(type);

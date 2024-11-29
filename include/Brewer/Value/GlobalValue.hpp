@@ -14,7 +14,7 @@ namespace Brewer
             Linkage_Global,
         };
 
-        GlobalValue(Type* type, std::string name, Linkage linkage);
+        GlobalValue(Type* type, std::string name, Linkage linkage, std::vector<std::string>&& meta);
 
         [[nodiscard]] Linkage GetLinkage() const;
 
@@ -28,7 +28,7 @@ namespace Brewer
     class GlobalVariable : public GlobalValue
     {
     public:
-        GlobalVariable(Type* type, std::string name, Linkage linkage, Constant* init);
+        GlobalVariable(Type* type, std::string name, Linkage linkage, Constant* init, std::vector<std::string>&& meta);
 
         [[nodiscard]] Constant* GetInit() const;
 
@@ -41,7 +41,7 @@ namespace Brewer
     class GlobalFunction : public GlobalValue
     {
     public:
-        GlobalFunction(FunctionType* type, std::string name, Linkage linkage, std::vector<FunctionArg*> args);
+        GlobalFunction(FunctionType* type, std::string name, Linkage linkage, std::vector<FunctionArg*> args, std::vector<std::string>&& meta);
 
         [[nodiscard]] FunctionArg* GetArg(unsigned i) const;
         [[nodiscard]] unsigned GetNumArgs() const;

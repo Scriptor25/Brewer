@@ -6,7 +6,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintCallee(Value* value)
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return PrintCallee(ptr);
 
-    Error("X86Printer::PrintCallee(Value*) not implemented: {}", value);
+    Error("X86 - PrintCallee(Value*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintCallee(NamedValue* value)

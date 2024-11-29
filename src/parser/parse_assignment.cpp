@@ -9,5 +9,7 @@ Brewer::Assignment* Brewer::Parser::ParseAssignment()
     const auto type = ParseType();
     const auto dst = m_Parent->Get(type, name);
     const auto src = ParseValue(type);
-    return new Assignment(dst, src);
+    std::vector<std::string> meta;
+    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+    return new Assignment(dst, src, std::move(meta));
 }

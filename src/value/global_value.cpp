@@ -3,8 +3,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::GlobalValue::GlobalValue(Type* type, std::string name, const Linkage linkage)
-    : NamedValue(type->GetContext().GetPointerType(type), std::move(name)), m_Linkage(linkage)
+Brewer::GlobalValue::GlobalValue(Type* type, std::string name, const Linkage linkage, std::vector<std::string>&& meta)
+    : NamedValue(type->GetContext().GetPointerType(type), std::move(name), std::move(meta)), m_Linkage(linkage)
 {
 }
 

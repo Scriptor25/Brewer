@@ -1,8 +1,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/Constant.hpp>
 
-Brewer::ConstantInt::ConstantInt(IntType* type, const uint64_t val)
-    : Constant(type), m_Val(val)
+Brewer::ConstantInt::ConstantInt(IntType* type, const uint64_t val, std::vector<std::string>&& meta)
+    : Constant(type, std::move(meta)), m_Val(val)
 {
 }
 

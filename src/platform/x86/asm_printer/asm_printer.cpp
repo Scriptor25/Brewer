@@ -3,18 +3,6 @@
 #include <Brewer/Platform/X86/ASMPrinter.hpp>
 #include <Brewer/Value/Value.hpp>
 
-static std::string suffix(const std::string& str, const unsigned bytes)
-{
-    static std::map<unsigned, char> s
-    {
-        {1, 'b'},
-        {2, 'w'},
-        {4, 'l'},
-        {8, 'q'},
-    };
-    return str + s[bytes];
-}
-
 bool Brewer::Platform::X86::ASMPrinter::Storage::Equal(const Storage& lhs, const Storage& rhs)
 {
     if (!lhs || !rhs) return false;
@@ -77,20 +65,20 @@ void Brewer::Platform::X86::ASMPrinter::Storage::Print(const ASMPrinter& printer
     }
     if (Direct)
     {
-        printer.S() << '%' << to_string(Base, bytes);
+        printer.S() << '%' << ToString(Base, bytes);
         return;
     }
 
     if (Segment) printer.S() << Segment << ':';
     if (Displacement) printer.S() << Displacement;
     printer.S() << '(';
-    if (Base) printer.S() << '%' << to_string(Base, 8);
+    if (Base) printer.S() << '%' << ToString(Base, 8);
     if (!Index)
     {
         printer.S() << ')';
         return;
     }
-    printer.S() << ",%" << to_string(Index, 8);
+    printer.S() << ",%" << ToString(Index, 8);
     if (!Scale)
     {
         printer.S() << ')';
@@ -104,7 +92,7 @@ Brewer::Platform::X86::ASMPrinter::Storage::operator bool() const
     return Valid;
 }
 
-std::string Brewer::Platform::X86::ASMPrinter::to_string(const Register reg, const unsigned bytes)
+std::string Brewer::Platform::X86::ASMPrinter::ToString(const Register reg, const unsigned bytes)
 {
     static std::map<Register, std::string> gp_regs
     {
@@ -195,10 +183,32 @@ std::string Brewer::Platform::X86::ASMPrinter::to_string(const Register reg, con
     return res;
 }
 
-const std::vector<Brewer::Platform::X86::ASMPrinter::Register> Brewer::Platform::X86::ASMPrinter::CALL_REGISTERS
+Brewer::Platform::X86::ASMPrinter::Register Brewer::Platform::X86::ASMPrinter::GetCallRegister(
+    const CallConv conv,
+    const unsigned i)
 {
-    RC, RD, R8, R9,
-};
+    constexpr Register ms_x64[]{RC, RD, R8, R9};
+    constexpr Register system_v[]{RDI, RSI, RD, RC, R8, R9};
+
+    switch (conv)
+    {
+    case MS_X64: return ms_x64[i];
+    case SYSTEM_V: return system_v[i];
+    }
+
+    Error("X86 - GetCallRegister({}, {})", static_cast<unsigned>(conv), i);
+}
+
+unsigned Brewer::Platform::X86::ASMPrinter::GetNumCallRegisters(const CallConv conv)
+{
+    switch (conv)
+    {
+    case MS_X64: return 4;
+    case SYSTEM_V: return 6;
+    }
+
+    Error("X86 - GetNumCallRegisters({})", static_cast<unsigned>(conv));
+}
 
 Brewer::Platform::X86::ASMPrinter::ASMPrinter(std::ostream& stream)
     : ASMPrinterBase(stream)
@@ -219,186 +229,6 @@ void Brewer::Platform::X86::ASMPrinter::Print(Module& module)
 void Brewer::Platform::X86::ASMPrinter::Print(Value* value)
 {
     return Print(value, {});
-}
-
-bool Brewer::Platform::X86::ASMPrinter::CanOmitMov(const Storage& src, const Storage& dst)
-{
-    if (Storage::Equal(src, dst))
-        return true;
-    if (Storage::Equal(src, m_LastSrc) && Storage::Equal(dst, m_LastDst))
-        return true;
-    if (Storage::Equal(dst, m_LastSrc) && Storage::Equal(src, m_LastDst))
-        return true;
-    return false;
-}
-
-void Brewer::Platform::X86::ASMPrinter::SetLast(const Storage& src, const Storage& dst)
-{
-    m_LastSrc = src;
-    m_LastDst = dst;
-}
-
-void Brewer::Platform::X86::ASMPrinter::ClearLast()
-{
-    SetLast({}, {});
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_op(
-    const std::string& name,
-    const std::vector<Storage>& operands,
-    const unsigned bytes)
-{
-    S() << '\t' << suffix(name, bytes) << ' ';
-    for (unsigned i = 0; i < operands.size(); ++i)
-    {
-        if (i > 0) S() << ", ";
-        operands[i].Print(*this, bytes);
-    }
-    S() << std::endl;
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_mov(const Storage& src, const Storage& dst, const unsigned bytes)
-{
-    if (CanOmitMov(src, dst))
-        return;
-    SetLast(src, dst);
-    asm_op("mov", {src, dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_push(const Storage& src, const unsigned bytes)
-{
-    asm_op("push", {src}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_pop(const Storage& dst, const unsigned bytes)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("pop", {dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_add(const Storage& src, const Storage& dst, const unsigned bytes)
-{
-    ClearLast();
-    asm_op("add", {src, dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_sub(const Storage& src, const Storage& dst, const unsigned bytes)
-{
-    ClearLast();
-    asm_op("sub", {src, dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_imul(const Storage& src, const Storage& dst, const unsigned bytes)
-{
-    ClearLast();
-    asm_op("imul", {src, dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_cmp(const Storage& l, const Storage& r, const unsigned bytes)
-{
-    asm_op("cmp", {l, r}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_lea(const Storage& src, const Storage& dst, const unsigned bytes)
-{
-    ClearLast();
-    asm_op("lea", {src, dst}, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_op(const std::string& name, Value* value, const Storage& dst)
-{
-    const auto bytes = value->GetType()->GetNumBytes();
-    S() << '\t' << suffix(name, bytes) << ' ';
-    PrintOperand(value);
-    if (dst)
-    {
-        S() << ", ";
-        dst.Print(*this, bytes);
-    }
-    S() << std::endl;
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_mov(Value* value, const Storage& dst)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("mov", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_push(Value* value)
-{
-    asm_op("push", value);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_pop(Value* value)
-{
-    asm_op("pop", value);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_add(Value* value, const Storage& dst)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("add", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_sub(Value* value, const Storage& dst)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("sub", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_imul(Value* value, const Storage& dst)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("imul", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_cmp(Value* value, const Storage& dst)
-{
-    ClearLast();
-    asm_op("cmp", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_lea(Value* value, const Storage& dst)
-{
-    if (Storage::Equal(dst, m_LastDst))
-        ClearLast();
-    asm_op("lea", value, dst);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_ret() const
-{
-    S() << '\t' << "ret" << std::endl;
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_call(Value* value, const Storage& dst)
-{
-    S() << '\t' << "call ";
-    PrintCallee(value);
-    S() << std::endl;
-
-    if (!dst) return;
-    const Storage rax(RA);
-    const auto bytes = value->GetType()->GetElementType()->GetResultType()->GetNumBytes();
-    asm_mov(rax, dst, bytes);
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_jmp(Value* value)
-{
-    S() << '\t' << "jmp ";
-    PrintCallee(value);
-    S() << std::endl;
-}
-
-void Brewer::Platform::X86::ASMPrinter::asm_jl(Value* value)
-{
-    S() << '\t' << "jl ";
-    PrintCallee(value);
-    S() << std::endl;
 }
 
 void Brewer::Platform::X86::ASMPrinter::BeginFrame()

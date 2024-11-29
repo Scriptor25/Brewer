@@ -16,7 +16,7 @@ void Brewer::Platform::X86::ASMPrinter::Print(Value* value, const Storage& dst)
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return Print(ptr, dst);
 
-    Error("X86Printer::Print(Value*) not implemented: {}", value);
+    Error("X86 - Print(Value*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(Assignment* value)
@@ -29,7 +29,7 @@ void Brewer::Platform::X86::ASMPrinter::Print(Assignment* value)
     const Storage rax(RA);
     const Storage storage(0, displacement, RBP, ZERO, 0);
     Print(src, rax);
-    asm_mov(rax, storage, bytes);
+    Mov(rax, storage, bytes);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(Constant* value, const Storage& dst)
@@ -37,14 +37,14 @@ void Brewer::Platform::X86::ASMPrinter::Print(Constant* value, const Storage& ds
     if (const auto ptr = dynamic_cast<ConstantInt*>(value))
         return Print(ptr, dst);
 
-    Error("X86Printer::Print(Constant*) not implemented: {}", value);
+    Error("X86 - Print(Constant*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(ConstantInt* value, const Storage& dst)
 {
     const auto bytes = value->GetType()->GetNumBytes();
     const Storage imm(value->GetVal());
-    asm_mov(imm, dst, bytes);
+    Mov(imm, dst, bytes);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage& dst)
@@ -56,8 +56,8 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
             const auto l_src = value->GetOperand(0);
             const auto r_src = value->GetOperand(1);
 
-            asm_mov(l_src, dst);
-            asm_add(r_src, dst);
+            Mov(l_src, dst);
+            Add(r_src, dst);
         }
         return;
     case Instruction::Sub:
@@ -65,13 +65,20 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
             const auto l_src = value->GetOperand(0);
             const auto r_src = value->GetOperand(1);
 
-            asm_mov(l_src, dst);
-            asm_sub(r_src, dst);
+            Mov(l_src, dst);
+            Sub(r_src, dst);
         }
         return;
     case Instruction::Call:
         {
-            // Microsoft x64
+            CallConv conv;
+#ifdef _WIN32
+            conv = MS_X64;
+#else
+            conv = SYSTEM_V;
+#endif
+            if (value->GetMeta("ms_x64")) conv = MS_X64;
+            if (value->GetMeta("system_v")) conv = SYSTEM_V;
 
             const auto callee = value->GetOperand(0);
             const auto args = value->GetOperandRange(1);
@@ -82,22 +89,20 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
                 const auto j = i - 1;
                 const auto arg = args[j];
 
-                // mov first 4 args into calling registers
-                if (j < CALL_REGISTERS.size())
+                if (j < GetNumCallRegisters(conv))
                 {
-                    const Storage reg(CALL_REGISTERS[j]);
-                    asm_mov(arg, reg);
+                    const Storage reg(GetCallRegister(conv, j));
+                    Mov(arg, reg);
                 }
-                // push other args from right to left
                 else
                 {
                     displacement -= 8;
                     const Storage mem(0, displacement, RSP, ZERO, 0);
-                    asm_mov(arg, mem);
+                    Mov(arg, mem);
                 }
             }
 
-            asm_call(callee, dst);
+            Call(callee, dst);
         }
         return;
     case Instruction::Gep:
@@ -124,7 +129,7 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
                     if (const uint64_t offset = st->GetElementOffset(ei))
                     {
                         const Storage imm(offset);
-                        asm_add(imm, rax, 8);
+                        Add(imm, rax, 8);
                     }
                     continue;
                 }
@@ -137,12 +142,12 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
 
                 const Storage rcx(RC);
                 const Storage imm(size);
-                asm_mov(index, rcx);
-                asm_imul(imm, rcx, 8);
-                asm_add(rcx, rax, 8);
+                Mov(index, rcx);
+                IMul(imm, rcx, 8);
+                Add(rcx, rax, 8);
             }
 
-            asm_mov(rax, dst, 8);
+            Mov(rax, dst, 8);
         }
         return;
     case Instruction::Load:
@@ -154,8 +159,8 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
             const Storage storage(0, 0, RA, ZERO, 0);
 
             Print(ptr, rax);
-            asm_mov(storage, rax, bytes);
-            asm_mov(rax, dst, bytes);
+            Mov(storage, rax, bytes);
+            Mov(rax, dst, bytes);
         }
         return;
     case Instruction::Store:
@@ -170,7 +175,7 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
 
             Print(ptr, rcx);
             Print(val, rax);
-            asm_mov(rax, storage, bytes);
+            Mov(rax, storage, bytes);
         }
         return;
     case Instruction::Alloca:
@@ -182,16 +187,16 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
             const Storage rbp(RBP);
             const Storage rax(RA);
             const Storage imm(displacement);
-            asm_mov(rbp, rax, 8);
-            asm_add(imm, rax, 8);
-            asm_mov(rax, dst, 8);
+            Mov(rbp, rax, 8);
+            Add(imm, rax, 8);
+            Mov(rax, dst, 8);
         }
         return;
     case Instruction::Br:
         {
             const auto dst_val = value->GetOperand(0);
 
-            asm_jmp(dst_val);
+            Jmp(dst_val);
         }
         return;
     case Instruction::Br_Lt:
@@ -202,10 +207,10 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
             const auto else_dst = value->GetOperand(3);
 
             const Storage tmp(RA);
-            asm_mov(l_src, tmp);
-            asm_cmp(r_src, tmp);
-            asm_jl(then_dst);
-            asm_jmp(else_dst);
+            Mov(l_src, tmp);
+            Cmp(r_src, tmp);
+            Jl(then_dst);
+            Jmp(else_dst);
         }
         return;
     case Instruction::Ret:
@@ -218,16 +223,16 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
 
             Print(result, rax);
 
-            asm_mov(rbp, rsp, 8);
-            asm_pop(rbp, 8);
-            asm_ret();
+            Mov(rbp, rsp, 8);
+            Pop(rbp, 8);
+            Ret();
         }
         return;
 
     default: break;
     }
 
-    Error("X86Printer::Print(Instruction*) not implemented: {}", value);
+    Error("X86 - Print(Instruction*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(NamedValue* value, const Storage& dst)
@@ -240,15 +245,15 @@ void Brewer::Platform::X86::ASMPrinter::Print(NamedValue* value, const Storage& 
     const auto displacement = GetOffset(value);
     const auto bytes = value->GetType()->GetNumBytes();
     const Storage storage(0, displacement, RBP, ZERO, 0);
-    asm_mov(storage, dst, bytes);
+    Mov(storage, dst, bytes);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(FunctionBlock* value, const Storage& dst)
 {
-    asm_lea(value, dst);
+    Lea(value, dst);
 }
 
 void Brewer::Platform::X86::ASMPrinter::Print(GlobalValue* value, const Storage& dst)
 {
-    asm_lea(value, dst);
+    Lea(value, dst);
 }

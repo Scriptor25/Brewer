@@ -9,7 +9,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(Value* value)
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return PrintGlobal(ptr);
 
-    Error("X86Printer::PrintGlobal(Value*) not implemented: {}", value);
+    Error("X86 - PrintGlobal(Value*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobal(NamedValue* value)
@@ -19,7 +19,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(NamedValue* value)
     if (const auto ptr = dynamic_cast<FunctionBlock*>(value))
         return PrintGlobal(ptr);
 
-    Error("X86Printer::PrintGlobal(NamedValue*) not implemented: {}", value);
+    Error("X86 - PrintGlobal(NamedValue*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalValue* value)
@@ -29,7 +29,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalValue* value)
     if (const auto ptr = dynamic_cast<GlobalFunction*>(value))
         return PrintGlobal(ptr);
 
-    Error("X86Printer::PrintGlobal(GlobalValue*) not implemented: {}", value);
+    Error("X86 - PrintGlobal(GlobalValue*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalVariable* value)
@@ -86,31 +86,40 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
     const Storage rbp(RBP);
     const Storage rsp(RSP);
 
-    asm_push(rbp, 8);
-    asm_mov(rsp, rbp, 8);
+    Push(rbp, 8);
+    Mov(rsp, rbp, 8);
 
     if (uint64_t bytes = value->GetNumAllocaBytes())
     {
         if (const auto rem = bytes % 0x10)
             bytes += 0x10 - rem;
 
-        m_Top = bytes;
+        m_Top = static_cast<int64_t>(bytes);
 
         const Storage imm(bytes);
-        asm_sub(imm, rsp, 8);
+        Sub(imm, rsp, 8);
     }
+
+    CallConv conv;
+#ifdef _WIN32
+    conv = MS_X64;
+#else
+    conv = SYSTEM_V;
+#endif
+    if (value->GetMeta("ms_x64")) conv = MS_X64;
+    if (value->GetMeta("system_v")) conv = SYSTEM_V;
 
     for (unsigned i = 0; i < value->GetNumArgs(); ++i)
     {
         const auto arg = value->GetArg(i);
         const auto offset = 0x10 + 8 * i;
         m_Offsets[arg] = offset;
-        if (i < CALL_REGISTERS.size())
+        if (i < GetNumCallRegisters(conv))
         {
             const auto bytes = arg->GetType()->GetNumBytes();
-            const Storage reg(CALL_REGISTERS[i]);
+            const Storage reg(GetCallRegister(conv, i));
             const Storage storage(0, offset, RBP, ZERO, 0);
-            asm_mov(reg, storage, bytes);
+            Mov(reg, storage, bytes);
         }
     }
 

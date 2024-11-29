@@ -11,12 +11,12 @@ void Brewer::Platform::X86::ASMPrinter::PrintOperand(Value* value)
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return PrintOperand(ptr);
 
-    Error("X86Printer::PrintOperand(Value*) not implemented: {}", value);
+    Error("X86 - PrintOperand(Value*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintOperand(Assignment* value)
 {
-    Error("X86Printer::PrintOperand(Assignment*) not implemented: {}", value);
+    Error("X86 - PrintOperand(Assignment*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintOperand(Constant* value)
@@ -26,7 +26,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintOperand(Constant* value)
     if (const auto ptr = dynamic_cast<ConstantFloat*>(value))
         return PrintOperand(ptr);
 
-    Error("X86Printer::PrintOperand(Constant*) not implemented: {}", value);
+    Error("X86 - PrintOperand(Constant*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintOperand(ConstantInt* value)
@@ -36,7 +36,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintOperand(ConstantInt* value)
 
 void Brewer::Platform::X86::ASMPrinter::PrintOperand(ConstantFloat* value)
 {
-    Error("X86Printer::PrintOperand(ConstantFloat*) not implemented: {}", value);
+    Error("X86 - PrintOperand(ConstantFloat*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintOperand(NamedValue* value)

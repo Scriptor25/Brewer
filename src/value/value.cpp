@@ -1,9 +1,10 @@
+#include <algorithm>
 #include <Brewer/Value/Value.hpp>
 
 static unsigned INDEX = 0;
 
-Brewer::Value::Value(Type* type)
-    : m_Index(INDEX++), m_Type(type)
+Brewer::Value::Value(Type* type, std::vector<std::string>&& meta)
+    : m_Index(INDEX++), m_Type(type), m_Meta(std::move(meta))
 {
 }
 
@@ -15,6 +16,11 @@ unsigned Brewer::Value::GetIndex() const
 Brewer::Type* Brewer::Value::GetType() const
 {
     return m_Type;
+}
+
+bool Brewer::Value::GetMeta(const std::string& name) const
+{
+    return std::ranges::any_of(m_Meta, [&](const std::string& meta) { return meta == name; });
 }
 
 uint64_t Brewer::Value::GetNumUses() const

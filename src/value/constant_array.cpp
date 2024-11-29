@@ -3,8 +3,8 @@
 
 #include "Brewer/Context.hpp"
 
-Brewer::ConstantArray::ConstantArray(ArrayType* type, std::vector<Constant*> vals)
-    : Constant(type), m_Vals(std::move(vals))
+Brewer::ConstantArray::ConstantArray(ArrayType* type, std::vector<Constant*> vals, std::vector<std::string>&& meta)
+    : Constant(type, std::move(meta)), m_Vals(std::move(vals))
 {
 }
 

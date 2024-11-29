@@ -31,15 +31,20 @@ Brewer::GlobalFunction* Brewer::Parser::ParseGlobalFunction()
         const auto arg_type = ParseType();
         arg_types.push_back(arg_type);
         const auto arg_name = Expect(TokenType_LocalId).Str;
-        args.push_back(new FunctionArg(arg_type, arg_name));
+        std::vector<std::string> meta;
+        while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+        args.push_back(new FunctionArg(arg_type, arg_name, std::move(meta)));
 
         if (!At(")"))
             Expect(",");
     }
     Expect(")");
 
+    std::vector<std::string> meta;
+    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+
     const auto type = m_Dest.GetContext().GetFunctionType(result_type, std::move(arg_types), vararg);
-    const auto function = new GlobalFunction(type, std::move(name), linkage, std::move(args));
+    const auto function = new GlobalFunction(type, std::move(name), linkage, std::move(args), std::move(meta));
 
     if (!NextAt("{"))
         return function;

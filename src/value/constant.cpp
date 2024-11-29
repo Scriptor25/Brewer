@@ -1,7 +1,7 @@
 #include <Brewer/Value/Constant.hpp>
 
-Brewer::Constant::Constant(Type* type)
-    : Value(type)
+Brewer::Constant::Constant(Type* type, std::vector<std::string>&& meta)
+    : Value(type, std::move(meta))
 {
 }
 

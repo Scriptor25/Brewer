@@ -1,8 +1,13 @@
 #include <Brewer/Value/Constant.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::GlobalVariable::GlobalVariable(Type* type, std::string name, const Linkage linkage, Constant* init)
-    : GlobalValue(type, std::move(name), linkage), m_Init(init)
+Brewer::GlobalVariable::GlobalVariable(
+    Type* type,
+    std::string name,
+    const Linkage linkage,
+    Constant* init,
+    std::vector<std::string>&& meta)
+    : GlobalValue(type, std::move(name), linkage, std::move(meta)), m_Init(init)
 {
 }
 

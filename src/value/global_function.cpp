@@ -6,8 +6,9 @@ Brewer::GlobalFunction::GlobalFunction(
     FunctionType* type,
     std::string name,
     const Linkage linkage,
-    std::vector<FunctionArg*> args)
-    : GlobalValue(type, std::move(name), linkage), m_Args(std::move(args))
+    std::vector<FunctionArg*> args,
+    std::vector<std::string>&& meta)
+    : GlobalValue(type, std::move(name), linkage, std::move(meta)), m_Args(std::move(args))
 {
 }
 
@@ -54,7 +55,7 @@ void Brewer::GlobalFunction::Append(Value* value)
 
     if (m_Blocks.empty())
     {
-        const auto block = new FunctionBlock(GetType()->GetContext().GetBlockType(), {});
+        const auto block = new FunctionBlock(GetType()->GetContext().GetBlockType(), {}, {});
         block->AddUse(this);
         m_Blocks.emplace_back() = block;
     }
@@ -73,7 +74,7 @@ Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& n
     {
         if (const auto block = Find(m_Blocks, type, name))
             return block;
-        return m_Unresolved.emplace_back() = new FunctionBlock(block_type, name);
+        return m_Unresolved.emplace_back() = new FunctionBlock(block_type, name, {});
     }
 
     if (const auto arg = Find(m_Args, type, name))
@@ -82,7 +83,7 @@ Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& n
     if (const auto local = Find(m_Locals, type, name))
         return local;
 
-    const auto local = new NamedValue(type, name);
+    const auto local = new NamedValue(type, name, {});
     return m_Locals.emplace_back() = local;
 }
 

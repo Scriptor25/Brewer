@@ -1,7 +1,7 @@
 #include <Brewer/Value/Value.hpp>
 
-Brewer::Assignment::Assignment(Value* dst, Value* src)
-    : Value(dst->GetType()), m_Dst(dst), m_Src(src)
+Brewer::Assignment::Assignment(Value* dst, Value* src, std::vector<std::string>&& meta)
+    : Value(dst->GetType(), std::move(meta)), m_Dst(dst), m_Src(src)
 {
     m_Src->AddUse(this);
 }

@@ -9,5 +9,7 @@ Brewer::ConstantFloat* Brewer::Parser::ParseConstantFloat(Type* type)
         Error("not a float type");
 
     const auto val = Expect(TokenType_Float).Flt;
-    return new ConstantFloat(float_type, val);
+    std::vector<std::string> meta;
+    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+    return new ConstantFloat(float_type, val, std::move(meta));
 }

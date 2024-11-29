@@ -1,8 +1,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/NamedValue.hpp>
 
-Brewer::FunctionBlock::FunctionBlock(BlockType* type, std::string name)
-    : NamedValue(type, std::move(name))
+Brewer::FunctionBlock::FunctionBlock(BlockType* type, std::string name, std::vector<std::string>&& meta)
+    : NamedValue(type, std::move(name), std::move(meta))
 {
 }
 

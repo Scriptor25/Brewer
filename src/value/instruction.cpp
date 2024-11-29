@@ -4,8 +4,12 @@
 
 #include "Brewer/Value/Constant.hpp"
 
-Brewer::Instruction::Instruction(Type* type, const Code code, std::vector<Value*> operands)
-    : Value(type), m_Code(code), m_Operands(std::move(operands))
+Brewer::Instruction::Instruction(
+    Type* type,
+    const Code code,
+    std::vector<Value*> operands,
+    std::vector<std::string>&& meta)
+    : Value(type, std::move(meta)), m_Code(code), m_Operands(std::move(operands))
 {
     for (const auto& operand : m_Operands)
         operand->AddUse(this);

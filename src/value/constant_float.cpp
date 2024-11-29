@@ -1,8 +1,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/Constant.hpp>
 
-Brewer::ConstantFloat::ConstantFloat(FloatType* type, const double val)
-    : Constant(type), m_Val(val)
+Brewer::ConstantFloat::ConstantFloat(FloatType* type, const double val, std::vector<std::string>&& meta)
+    : Constant(type, std::move(meta)), m_Val(val)
 {
 }
 

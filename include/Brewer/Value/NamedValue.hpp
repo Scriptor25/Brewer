@@ -7,7 +7,7 @@ namespace Brewer
     class NamedValue : public Value
     {
     public:
-        NamedValue(Type* type, std::string name);
+        NamedValue(Type* type, std::string name, std::vector<std::string>&& meta);
 
         [[nodiscard]] std::string GetName() const;
 
@@ -21,13 +21,13 @@ namespace Brewer
     class FunctionArg : public NamedValue
     {
     public:
-        FunctionArg(Type* type, std::string name);
+        FunctionArg(Type* type, std::string name, std::vector<std::string>&& meta);
     };
 
     class FunctionBlock : public NamedValue
     {
     public:
-        FunctionBlock(BlockType* type, std::string name);
+        FunctionBlock(BlockType* type, std::string name, std::vector<std::string>&& meta);
 
         [[nodiscard]] Value* GetValue(unsigned i) const;
         [[nodiscard]] unsigned GetNumValues() const;

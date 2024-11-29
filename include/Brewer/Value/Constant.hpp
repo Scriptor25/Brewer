@@ -8,7 +8,7 @@ namespace Brewer
     class Constant : public Value
     {
     public:
-        explicit Constant(Type* type);
+        Constant(Type* type, std::vector<std::string>&& meta);
 
         [[nodiscard]] bool RequiresDestination() const override;
     };
@@ -16,7 +16,7 @@ namespace Brewer
     class ConstantInt : public Constant
     {
     public:
-        ConstantInt(IntType* type, uint64_t val);
+        ConstantInt(IntType* type, uint64_t val, std::vector<std::string>&& meta);
 
         [[nodiscard]] uint64_t GetVal() const;
 
@@ -30,7 +30,7 @@ namespace Brewer
     class ConstantFloat : public Constant
     {
     public:
-        ConstantFloat(FloatType* type, double val);
+        ConstantFloat(FloatType* type, double val, std::vector<std::string>&& meta);
 
         [[nodiscard]] double GetVal() const;
 
@@ -44,7 +44,7 @@ namespace Brewer
     class ConstantArray : public Constant
     {
     public:
-        ConstantArray(ArrayType* type, std::vector<Constant*> vals);
+        ConstantArray(ArrayType* type, std::vector<Constant*> vals, std::vector<std::string>&& meta);
 
         [[nodiscard]] Constant* GetVal(unsigned i) const;
         [[nodiscard]] unsigned GetNumVals() const;

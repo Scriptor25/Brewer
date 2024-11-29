@@ -9,5 +9,7 @@ Brewer::ConstantInt* Brewer::Parser::ParseConstantInt(Type* type)
         Error("not an integer type");
 
     const auto val = Expect(TokenType_Int).Int;
-    return new ConstantInt(int_type, val);
+    std::vector<std::string> meta;
+    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+    return new ConstantInt(int_type, val, std::move(meta));
 }

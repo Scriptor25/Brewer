@@ -10,6 +10,12 @@ namespace Brewer::Platform::X86
 {
     class ASMPrinter : public ASMPrinterBase
     {
+        enum CallConv
+        {
+            MS_X64,
+            SYSTEM_V,
+        };
+
         enum Register
         {
             ZERO,
@@ -41,9 +47,10 @@ namespace Brewer::Platform::X86
             int64_t Scale = 0;
         };
 
-        static std::string to_string(Register reg, unsigned bytes);
+        static std::string ToString(Register reg, unsigned bytes);
 
-        static const std::vector<Register> CALL_REGISTERS;
+        static Register GetCallRegister(CallConv conv, unsigned i);
+        static unsigned GetNumCallRegisters(CallConv conv);
 
     public:
         explicit ASMPrinter(std::ostream& stream);
@@ -56,30 +63,30 @@ namespace Brewer::Platform::X86
         void SetLast(const Storage& src, const Storage& dst);
         void ClearLast();
 
-        void asm_op(const std::string& name, const std::vector<Storage>& operands, unsigned bytes);
-        void asm_mov(const Storage& src, const Storage& dst, unsigned bytes);
-        void asm_push(const Storage& src, unsigned bytes);
-        void asm_pop(const Storage& dst, unsigned bytes);
-        void asm_add(const Storage& src, const Storage& dst, unsigned bytes);
-        void asm_sub(const Storage& src, const Storage& dst, unsigned bytes);
-        void asm_imul(const Storage& src, const Storage& dst, unsigned bytes);
-        void asm_cmp(const Storage& l, const Storage& r, unsigned bytes);
-        void asm_lea(const Storage& src, const Storage& dst, unsigned bytes);
+        void Asm(const std::string& name, const std::vector<Storage>& operands, unsigned bytes);
+        void Mov(const Storage& src, const Storage& dst, unsigned bytes);
+        void Push(const Storage& src, unsigned bytes);
+        void Pop(const Storage& dst, unsigned bytes);
+        void Add(const Storage& src, const Storage& dst, unsigned bytes);
+        void Sub(const Storage& src, const Storage& dst, unsigned bytes);
+        void IMul(const Storage& src, const Storage& dst, unsigned bytes);
+        void Cmp(const Storage& l, const Storage& r, unsigned bytes);
+        void Lea(const Storage& src, const Storage& dst, unsigned bytes);
 
-        void asm_op(const std::string& name, Value* value, const Storage& dst = {});
-        void asm_mov(Value* value, const Storage& dst);
-        void asm_push(Value* value);
-        void asm_pop(Value* value);
-        void asm_add(Value* value, const Storage& dst);
-        void asm_sub(Value* value, const Storage& dst);
-        void asm_imul(Value* value, const Storage& dst);
-        void asm_cmp(Value* value, const Storage& dst);
-        void asm_lea(Value* value, const Storage& dst);
+        void Asm(const std::string& name, Value* value, const Storage& dst = {});
+        void Mov(Value* value, const Storage& dst);
+        void Push(Value* value);
+        void Pop(Value* value);
+        void Add(Value* value, const Storage& dst);
+        void Sub(Value* value, const Storage& dst);
+        void IMul(Value* value, const Storage& dst);
+        void Cmp(Value* value, const Storage& dst);
+        void Lea(Value* value, const Storage& dst);
 
-        void asm_ret() const;
-        void asm_call(Value* value, const Storage& dst);
-        void asm_jmp(Value* value);
-        void asm_jl(Value* value);
+        void Ret() const;
+        void Call(Value* value, const Storage& dst);
+        void Jmp(Value* value);
+        void Jl(Value* value);
 
         void BeginFrame();
         int64_t GetOffset(Value* value);

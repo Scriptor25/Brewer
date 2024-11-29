@@ -6,7 +6,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobalOperand(Value* value)
     if (const auto ptr = dynamic_cast<Constant*>(value))
         return PrintGlobalOperand(ptr);
 
-    Error("X86Printer::PrintGlobalOperand(Value*) not implemented: {}", value);
+    Error("X86 - PrintGlobalOperand(Value*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobalOperand(Constant* value)
@@ -16,7 +16,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobalOperand(Constant* value)
     if (const auto ptr = dynamic_cast<ConstantArray*>(value))
         return PrintGlobalOperand(ptr);
 
-    Error("X86Printer::PrintGlobalOperand(Constant*) not implemented: {}", value);
+    Error("X86 - PrintGlobalOperand(Constant*) not implemented: {}", value);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintGlobalOperand(ConstantInt* value)

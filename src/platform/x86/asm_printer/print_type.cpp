@@ -12,7 +12,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintType(Type* type)
     if (const auto ptr = dynamic_cast<ArrayType*>(type))
         return PrintType(ptr);
 
-    Error("X86Printer::Print(Type*) not implemented: {}", type);
+    Error("X86 - Print(Type*) not implemented: {}", type);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintType(IntType* type)
@@ -36,7 +36,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintType(IntType* type)
         break;
     }
 
-    Error("X86Printer::Print(IntType*) not implemented: {}", type);
+    Error("X86 - Print(IntType*) not implemented: {}", type);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintType(FloatType* type)
@@ -54,7 +54,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintType(FloatType* type)
         break;
     }
 
-    Error("X86Printer::Print(FloatType*) not implemented: {}", type);
+    Error("X86 - Print(FloatType*) not implemented: {}", type);
 }
 
 void Brewer::Platform::X86::ASMPrinter::PrintType(PointerType*)
