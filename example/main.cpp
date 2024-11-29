@@ -4,6 +4,7 @@
 #include <Brewer/Context.hpp>
 #include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
+#include <Brewer/Printer/IRPrinter.hpp>
 #include <Brewer/Printer/X86Printer.hpp>
 
 int main()
@@ -17,6 +18,8 @@ int main()
     std::ifstream is(input);
     Brewer::Parser::Parse(is, module);
     is.close();
+
+    module.ValidateAndOptimize();
 
     std::ofstream os(output);
     Brewer::X86Printer printer(os);

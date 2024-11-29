@@ -9,8 +9,6 @@ Brewer::GlobalFunction::GlobalFunction(
     std::vector<FunctionArg*> args)
     : GlobalValue(type, std::move(name), linkage), m_Args(std::move(args))
 {
-    for (const auto& arg : m_Args)
-        arg->AddUse(this);
 }
 
 Brewer::FunctionArg* Brewer::GlobalFunction::GetArg(const unsigned i) const
@@ -38,29 +36,35 @@ bool Brewer::GlobalFunction::IsEmpty() const
     return GetNumBlocks() == 0;
 }
 
-unsigned Brewer::GlobalFunction::GetByteAlloc() const
-{
-    unsigned bytes = 0;
-    for (const auto local : m_Locals)
-        bytes += local->GetType()->CountBytes();
-    return bytes;
-}
-
 void Brewer::GlobalFunction::Append(Value* value)
 {
     if (const auto block = dynamic_cast<FunctionBlock*>(value))
     {
         if (const auto old_block = Erase(m_Unresolved, block->GetName()))
             old_block->ReplaceWith(block);
+        if (m_Blocks.empty()) block->AddUse(this);
         m_Blocks.push_back(block);
-        block->AddUse(this);
         return;
     }
 
     if (m_Blocks.empty())
-        m_Blocks.emplace_back() = new FunctionBlock(GetType()->GetContext().GetBlockType(), {});
+    {
+        const auto block = new FunctionBlock(GetType()->GetContext().GetBlockType(), {});
+        block->AddUse(this);
+        m_Blocks.emplace_back() = block;
+    }
 
     m_Blocks.back()->Append(value);
+}
+
+void Brewer::GlobalFunction::EraseBlock(const unsigned i)
+{
+    m_Blocks.erase(m_Blocks.begin() + i);
+}
+
+bool Brewer::GlobalFunction::HasUnresolved() const
+{
+    return !m_Unresolved.empty();
 }
 
 Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& name)
@@ -79,13 +83,51 @@ Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& n
         return local;
 
     const auto local = new NamedValue(type, name);
-    local->AddUse(this);
     return m_Locals.emplace_back() = local;
 }
 
-void Brewer::GlobalFunction::Replace(Value* old_value, Value* new_value)
+uint64_t Brewer::GlobalFunction::CountAlloca() const
 {
-    Brewer::Replace(m_Args, old_value, new_value);
-    Brewer::Replace(m_Locals, old_value, new_value);
-    Brewer::Replace(m_Blocks, old_value, new_value);
+    uint64_t bytes = 0;
+    uint64_t max_shadow = 0;
+    for (const auto local : m_Locals)
+        bytes += local->GetType()->CountBytes();
+    for (const auto block : m_Blocks)
+        for (unsigned i = 0; i < block->GetNumValues(); ++i)
+        {
+            const auto value = block->GetValue(i);
+            const auto b = value->CountAlloca();
+            if (const auto inst = dynamic_cast<Instruction*>(value);
+                inst && inst->GetCode() == Instruction::Call && b > max_shadow)
+                max_shadow = b;
+            else bytes += b;
+        }
+    return bytes;
+}
+
+std::ostream& Brewer::GlobalFunction::PrintIR(std::ostream& os) const
+{
+    os << "fun ";
+    GetType()->GetElementType()->GetResultType()->Print(os);
+    os << ' ';
+    if (GetLinkage() != Linkage_Global)
+        os << ToString(GetLinkage()) << ' ';
+    os << '@' << GetName() << '(';
+    for (unsigned i = 0; i < m_Args.size(); ++i)
+    {
+        if (i > 0) os << ", ";
+        m_Args[i]->PrintIR(os);
+    }
+    if (GetType()->GetElementType()->IsVarArg())
+    {
+        if (!m_Args.empty()) os << ", ";
+        os << "...";
+    }
+    os << ')';
+    if (IsEmpty()) return os;
+
+    os << " {" << std::endl;
+    for (const auto block : m_Blocks)
+        block->PrintIR(os);
+    return os << '}';
 }

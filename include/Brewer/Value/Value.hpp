@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <sstream>
 #include <Brewer/Brewer.hpp>
 
@@ -13,11 +14,17 @@ namespace Brewer
         [[nodiscard]] unsigned GetIndex() const;
         [[nodiscard]] Type* GetType() const;
 
+        uint64_t GetNumUses() const;
         void AddUse(Value* user);
+        void RemoveUse(Value* user);
         void ReplaceWith(Value* new_value);
+        std::ostream& PrintUseList(std::ostream& os) const;
 
         virtual ~Value();
-        virtual bool NotNull() const;
+        [[nodiscard]] virtual bool NotNull() const;
+        virtual bool IsTerminator() const;
+        virtual bool NeedsDestination() const;
+        [[nodiscard]] virtual uint64_t CountAlloca() const;
         virtual void Replace(Value* old_value, Value* new_value);
         virtual std::ostream& PrintIR(std::ostream& os) const;
         virtual std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const = 0;
@@ -77,6 +84,9 @@ namespace Brewer
         [[nodiscard]] unsigned GetNumOperands() const;
         [[nodiscard]] std::vector<Value*> GetOperandRange(unsigned beg, unsigned end = -1) const;
 
+        bool IsTerminator() const override;
+        bool NeedsDestination() const override;
+        [[nodiscard]] uint64_t CountAlloca() const override;
         void Replace(Value* old_value, Value* new_value) override;
 
     private:
@@ -100,7 +110,7 @@ namespace std
         auto format(V* value, FormatContext& ctx) const
         {
             std::stringstream ss;
-            value->PrintIR(ss);
+            value->PrintOperandIR(ss, false);
             return formatter<string>::format(ss.str(), ctx);
         }
     };

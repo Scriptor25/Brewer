@@ -73,46 +73,60 @@ void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
     default: break;
     }
 
+    S() << ".def " << value->GetName() << "; .scl 2; .type 32; .endef" << std::endl;
+
     if (value->IsEmpty())
     {
         S() << ".extern " << value->GetName() << std::endl;
         return;
     }
 
+    S() << ".seh_proc " << value->GetName() << std::endl;
     S() << value->GetName() << ':' << std::endl;
 
     BeginFrame();
 
-    const RegisterStorage rbp(RBP);
-    const RegisterStorage rsp(RSP);
+    const Storage rbp(RBP);
+    const Storage rsp(RSP);
 
-    push(&rbp, 8);
-    mov(&rsp, &rbp, 8);
+    push(rbp, 8);
+    S() << ".seh_pushreg %rbp" << std::endl;
+    mov(rsp, rbp, 8);
+    S() << ".seh_setframe %rbp, 0" << std::endl;
 
-    if (auto bytes = value->GetByteAlloc())
+    if (uint64_t bytes = value->CountAlloca())
     {
         if (const auto rem = bytes % 0x10)
             bytes += 0x10 - rem;
-        const ImmediateStorage imm(static_cast<int>(bytes));
-        sub(&imm, &rsp, 8);
+
+        m_Top = bytes;
+
+        const Storage imm(bytes);
+        sub(imm, rsp, 8);
+
+        S() << ".seh_stackalloc " << bytes << std::endl;
     }
+
+    S() << ".seh_endprologue" << std::endl;
 
     for (unsigned i = 0; i < value->GetNumArgs(); ++i)
     {
         const auto arg = value->GetArg(i);
-        const auto offset = 0x10 + 8 * static_cast<int>(i);
+        const auto offset = 0x10 + 8 * i;
         m_Offsets[arg] = offset;
         if (i < CALL_REGISTERS.size())
         {
             const auto bytes = arg->GetType()->CountBytes();
-            const RegisterStorage reg(CALL_REGISTERS[i]);
-            const MemoryStorage storage(0, offset, RBP, NLL, 0);
-            mov(&reg, &storage, bytes);
+            const Storage reg(CALL_REGISTERS[i]);
+            const Storage storage(0, offset, RBP, NLL, 0);
+            mov(reg, storage, bytes);
         }
     }
 
     for (unsigned i = 0; i < value->GetNumBlocks(); ++i)
         PrintGlobal(value->GetBlock(i));
+
+    S() << ".seh_endproc" << std::endl;
 }
 
 void Brewer::X86Printer::PrintGlobal(FunctionBlock* value)

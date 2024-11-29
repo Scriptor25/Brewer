@@ -11,6 +11,7 @@ namespace Brewer
         TokenType_Id,
         TokenType_GlobalId,
         TokenType_LocalId,
+        TokenType_Meta,
         TokenType_Int,
         TokenType_Float,
         TokenType_String,

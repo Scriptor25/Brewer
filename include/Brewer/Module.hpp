@@ -23,6 +23,8 @@ namespace Brewer
 
         void ForEach(const std::function<void(GlobalValue*)>& consumer) const;
 
+        void ValidateAndOptimize();
+
     private:
         Context& m_Context;
         std::string m_Filename;

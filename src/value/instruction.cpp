@@ -2,6 +2,8 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/Value.hpp>
 
+#include "Brewer/Value/Constant.hpp"
+
 Brewer::Instruction::Instruction(Type* type, const Code code, std::vector<Value*> operands)
     : Value(type), m_Code(code), m_Operands(std::move(operands))
 {
@@ -42,6 +44,56 @@ std::vector<Brewer::Value*> Brewer::Instruction::GetOperandRange(unsigned beg, u
     for (unsigned i = beg; i < end && i < m_Operands.size(); ++i)
         result.push_back(m_Operands[i]);
     return result;
+}
+
+bool Brewer::Instruction::IsTerminator() const
+{
+    switch (m_Code)
+    {
+    case Ret:
+    case Br:
+    case Br_Lt:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool Brewer::Instruction::NeedsDestination() const
+{
+    switch (m_Code)
+    {
+    case Add:
+    case Sub:
+    case Gep:
+    case Load:
+    case Alloca:
+        return true;
+    default:
+        return false;
+    }
+}
+
+uint64_t Brewer::Instruction::CountAlloca() const
+{
+    uint64_t bytes = 0;
+    switch (m_Code)
+    {
+    case Call:
+        bytes = (m_Operands.size() - 1) * 8;
+        if (bytes < 32) bytes = 32; // shadow
+        break;
+
+    case Alloca:
+        bytes = GetType()->GetElementType()->CountBytes();
+        bytes *= dynamic_cast<ConstantInt*>(m_Operands[0])->GetVal();
+        if (const auto rem = bytes % 0x10)
+            bytes += 0x10 - rem;
+        break;
+
+    default: break;
+    }
+    return bytes;
 }
 
 void Brewer::Instruction::Replace(Value* old_value, Value* new_value)

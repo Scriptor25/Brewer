@@ -113,42 +113,72 @@ static std::string to_string(const Brewer::X86Printer::Register reg, const unsig
     return res;
 }
 
-bool Brewer::X86Printer::Storage::Equal(const Storage* lhs, const Storage* rhs)
+bool Brewer::X86Printer::Storage::Equal(const Storage& lhs, const Storage& rhs)
 {
-    if (lhs == rhs) return true;
-    if (lhs == nullptr || rhs == nullptr) return false;
-    return lhs->Equals(rhs);
+    if (!lhs || !rhs) return false;
+    if (lhs.Immediate != rhs.Immediate) return false;
+    if (lhs.Direct != rhs.Direct) return false;
+    if (lhs.Immediate)
+        return lhs.Displacement == rhs.Displacement;
+    if (lhs.Direct)
+        return lhs.Base == rhs.Base;
+    return lhs.Segment == rhs.Segment
+        && lhs.Displacement == rhs.Displacement
+        && lhs.Base == rhs.Base
+        && lhs.Index == rhs.Index
+        && lhs.Scale == rhs.Scale;
 }
 
-Brewer::X86Printer::RegisterStorage::RegisterStorage(const Register reg)
-    : Reg(reg)
+Brewer::X86Printer::Storage::Storage() = default;
+
+Brewer::X86Printer::Storage::Storage(const int64_t value)
+    : Valid(true), Immediate(true), Displacement(value)
 {
 }
 
-void Brewer::X86Printer::RegisterStorage::Print(X86Printer& printer, const unsigned bytes) const
+Brewer::X86Printer::Storage::Storage(const uint64_t value)
+    : Valid(true), Immediate(true), Displacement(value)
 {
-    printer.S() << '%' << to_string(Reg, bytes);
 }
 
-bool Brewer::X86Printer::RegisterStorage::Equals(const Storage* other) const
+Brewer::X86Printer::Storage::Storage(const Register reg)
+    : Valid(true), Direct(true), Base(reg)
 {
-    if (const auto reg = dynamic_cast<const RegisterStorage*>(other))
-        return reg->Reg == Reg;
-    return false;
 }
 
-Brewer::X86Printer::MemoryStorage::MemoryStorage(
-    const int segment,
-    const int displacement,
+Brewer::X86Printer::Storage::Storage(
+    const int64_t segment,
+    const int64_t displacement,
     const Register base,
     const Register index,
-    const int scale)
-    : Segment(segment), Displacement(displacement), Base(base), Index(index), Scale(scale)
+    const int64_t scale)
+    : Valid(true),
+      Segment(segment),
+      Displacement(displacement),
+      Base(base),
+      Index(index),
+      Scale(scale)
 {
 }
 
-void Brewer::X86Printer::MemoryStorage::Print(X86Printer& printer, unsigned) const
+void Brewer::X86Printer::Storage::Print(const X86Printer& printer, const unsigned bytes) const
 {
+    if (!Valid)
+    {
+        printer.S() << "<invalid>";
+        return;
+    }
+    if (Immediate)
+    {
+        printer.S() << '$' << Displacement;
+        return;
+    }
+    if (Direct)
+    {
+        printer.S() << '%' << to_string(Base, bytes);
+        return;
+    }
+
     if (Segment) printer.S() << Segment << ':';
     if (Displacement) printer.S() << Displacement;
     printer.S() << '(';
@@ -167,32 +197,9 @@ void Brewer::X86Printer::MemoryStorage::Print(X86Printer& printer, unsigned) con
     printer.S() << ',' << Scale << ')';
 }
 
-bool Brewer::X86Printer::MemoryStorage::Equals(const Storage* other) const
+Brewer::X86Printer::Storage::operator bool() const
 {
-    if (const auto mem = dynamic_cast<const MemoryStorage*>(other))
-        return mem->Segment == Segment
-            && mem->Displacement == Displacement
-            && mem->Base == Base
-            && mem->Index == Index
-            && mem->Scale == Scale;
-    return false;
-}
-
-Brewer::X86Printer::ImmediateStorage::ImmediateStorage(const int value)
-    : Value(value)
-{
-}
-
-void Brewer::X86Printer::ImmediateStorage::Print(X86Printer& printer, unsigned) const
-{
-    printer.S() << '$' << Value;
-}
-
-bool Brewer::X86Printer::ImmediateStorage::Equals(const Storage* other) const
-{
-    if (const auto imm = dynamic_cast<const ImmediateStorage*>(other))
-        return imm->Value == Value;
-    return false;
+    return Valid;
 }
 
 Brewer::X86Printer::X86Printer(std::ostream& stream)
@@ -200,59 +207,89 @@ Brewer::X86Printer::X86Printer(std::ostream& stream)
 {
 }
 
-void Brewer::X86Printer::op(const std::string& name, const std::vector<const Storage*>& operands, const unsigned bytes)
+bool Brewer::X86Printer::can_omit_mov(const Storage& src, const Storage& dst)
+{
+    if (Storage::Equal(src, dst))
+        return true;
+    if (Storage::Equal(src, m_LastSrc) && Storage::Equal(dst, m_LastDst))
+        return true;
+    if (Storage::Equal(dst, m_LastSrc) && Storage::Equal(src, m_LastDst))
+        return true;
+    return false;
+}
+
+void Brewer::X86Printer::set_last(const Storage& src, const Storage& dst)
+{
+    m_LastSrc = src;
+    m_LastDst = dst;
+}
+
+void Brewer::X86Printer::clear_last()
+{
+    set_last({}, {});
+}
+
+void Brewer::X86Printer::op(const std::string& name, const std::vector<Storage>& operands, const unsigned bytes)
 {
     S() << '\t' << suffix(name, bytes) << ' ';
     for (unsigned i = 0; i < operands.size(); ++i)
     {
         if (i > 0) S() << ", ";
-        operands[i]->Print(*this, bytes);
+        operands[i].Print(*this, bytes);
     }
     S() << std::endl;
 }
 
-void Brewer::X86Printer::mov(const Storage* src, const Storage* dst, const unsigned bytes)
+void Brewer::X86Printer::mov(const Storage& src, const Storage& dst, const unsigned bytes)
 {
-    if (Storage::Equal(src, dst)) return;
+    if (can_omit_mov(src, dst))
+        return;
+    set_last(src, dst);
     op("mov", {src, dst}, bytes);
 }
 
-void Brewer::X86Printer::push(const Storage* src, const unsigned bytes)
+void Brewer::X86Printer::push(const Storage& src, const unsigned bytes)
 {
     op("push", {src}, bytes);
 }
 
-void Brewer::X86Printer::pop(const Storage* dst, const unsigned bytes)
+void Brewer::X86Printer::pop(const Storage& dst, const unsigned bytes)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("pop", {dst}, bytes);
 }
 
-void Brewer::X86Printer::add(const Storage* src, const Storage* dst, const unsigned bytes)
+void Brewer::X86Printer::add(const Storage& src, const Storage& dst, const unsigned bytes)
 {
+    clear_last();
     op("add", {src, dst}, bytes);
 }
 
-void Brewer::X86Printer::sub(const Storage* src, const Storage* dst, unsigned bytes)
+void Brewer::X86Printer::sub(const Storage& src, const Storage& dst, const unsigned bytes)
 {
+    clear_last();
     op("sub", {src, dst}, bytes);
 }
 
-void Brewer::X86Printer::imul(const Storage* src, const Storage* dst, unsigned bytes)
+void Brewer::X86Printer::imul(const Storage& src, const Storage& dst, const unsigned bytes)
 {
+    clear_last();
     op("imul", {src, dst}, bytes);
 }
 
-void Brewer::X86Printer::cmp(const Storage* l, const Storage* r, const unsigned bytes)
+void Brewer::X86Printer::cmp(const Storage& l, const Storage& r, const unsigned bytes)
 {
     op("cmp", {l, r}, bytes);
 }
 
-void Brewer::X86Printer::lea(const Storage* src, const Storage* dst, unsigned bytes)
+void Brewer::X86Printer::lea(const Storage& src, const Storage& dst, const unsigned bytes)
 {
+    clear_last();
     op("lea", {src, dst}, bytes);
 }
 
-void Brewer::X86Printer::op(const std::string& name, Value* value, const Storage* dst)
+void Brewer::X86Printer::op(const std::string& name, Value* value, const Storage& dst)
 {
     const auto bytes = value->GetType()->CountBytes();
     S() << '\t' << suffix(name, bytes) << ' ';
@@ -260,13 +297,15 @@ void Brewer::X86Printer::op(const std::string& name, Value* value, const Storage
     if (dst)
     {
         S() << ", ";
-        dst->Print(*this, bytes);
+        dst.Print(*this, bytes);
     }
     S() << std::endl;
 }
 
-void Brewer::X86Printer::mov(Value* value, const Storage* dst)
+void Brewer::X86Printer::mov(Value* value, const Storage& dst)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("mov", value, dst);
 }
 
@@ -280,28 +319,37 @@ void Brewer::X86Printer::pop(Value* value)
     op("pop", value);
 }
 
-void Brewer::X86Printer::add(Value* value, const Storage* dst)
+void Brewer::X86Printer::add(Value* value, const Storage& dst)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("add", value, dst);
 }
 
-void Brewer::X86Printer::sub(Value* value, const Storage* dst)
+void Brewer::X86Printer::sub(Value* value, const Storage& dst)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("sub", value, dst);
 }
 
-void Brewer::X86Printer::imul(Value* value, const Storage* dst)
+void Brewer::X86Printer::imul(Value* value, const Storage& dst)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("imul", value, dst);
 }
 
-void Brewer::X86Printer::cmp(Value* value, const Storage* dst)
+void Brewer::X86Printer::cmp(Value* value, const Storage& dst)
 {
+    clear_last();
     op("cmp", value, dst);
 }
 
-void Brewer::X86Printer::lea(Value* value, const Storage* dst)
+void Brewer::X86Printer::lea(Value* value, const Storage& dst)
 {
+    if (Storage::Equal(dst, m_LastDst))
+        clear_last();
     op("lea", value, dst);
 }
 
@@ -310,16 +358,16 @@ void Brewer::X86Printer::ret() const
     S() << '\t' << "ret" << std::endl;
 }
 
-void Brewer::X86Printer::call(Value* value, const Storage* dst)
+void Brewer::X86Printer::call(Value* value, const Storage& dst)
 {
     S() << '\t' << "call ";
     PrintCallee(value);
     S() << std::endl;
 
     if (!dst) return;
-    const RegisterStorage rax(RAX);
+    const Storage rax(RAX);
     const auto bytes = value->GetType()->GetElementType()->GetResultType()->CountBytes();
-    mov(&rax, dst, bytes);
+    mov(rax, dst, bytes);
 }
 
 void Brewer::X86Printer::jmp(Value* value)
@@ -338,15 +386,17 @@ void Brewer::X86Printer::jl(Value* value)
 
 void Brewer::X86Printer::BeginFrame()
 {
+    clear_last();
     m_Offsets.clear();
+    m_Offset = 0;
     m_Top = 0;
 }
 
-int Brewer::X86Printer::GetOffset(Value* value)
+int64_t Brewer::X86Printer::GetOffset(Value* value)
 {
     if (m_Offsets.contains(value))
         return m_Offsets[value];
 
-    m_Top -= static_cast<int>(value->GetType()->CountBytes());
-    return m_Offsets[value] = m_Top;
+    m_Offset -= value->GetType()->CountBytes();
+    return m_Offsets[value] = m_Offset;
 }

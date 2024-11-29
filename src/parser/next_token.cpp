@@ -63,6 +63,12 @@ Brewer::Token& Brewer::Parser::NextToken()
                 Get();
                 break;
 
+            case '!':
+                state = State_Id;
+                type = TokenType_Meta;
+                Get();
+                break;
+
             case '0':
                 Get();
                 switch (m_Tok)

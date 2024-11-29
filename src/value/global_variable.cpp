@@ -4,7 +4,6 @@
 Brewer::GlobalVariable::GlobalVariable(Type* type, std::string name, const Linkage linkage, Constant* init)
     : GlobalValue(type, std::move(name), linkage), m_Init(init)
 {
-    m_Init->AddUse(this);
 }
 
 Brewer::Constant* Brewer::GlobalVariable::GetInit() const
@@ -12,7 +11,11 @@ Brewer::Constant* Brewer::GlobalVariable::GetInit() const
     return m_Init;
 }
 
-void Brewer::GlobalVariable::Replace(Value* old_value, Value* new_value)
+std::ostream& Brewer::GlobalVariable::PrintIR(std::ostream& os) const
 {
-    if (m_Init == old_value) old_value = new_value;
+    os << "var ";
+    if (GetLinkage() != Linkage_Local)
+        os << ToString(GetLinkage()) << ' ';
+    os << '@' << GetName() << " = ";
+    return m_Init->PrintOperandIR(os, false);
 }

@@ -33,6 +33,7 @@ fun i32 local @fib(i32 %n) {
     %i = i32 0
     %a = i32 0
     %b = i32 1
+    br %head
 head:
     br.lt i32 %i, i32 %n, %loop, %end
 loop:

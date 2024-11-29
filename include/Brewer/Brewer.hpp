@@ -117,4 +117,16 @@ namespace Brewer
             }
         return {};
     }
+
+    template <typename T = Value>
+    T* Erase(std::vector<T*>& values, T* value)
+    {
+        for (auto it = values.begin(); it != values.end(); ++it)
+            if (*it == value)
+            {
+                values.erase(it);
+                return value;
+            }
+        return {};
+    }
 }

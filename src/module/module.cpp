@@ -64,3 +64,74 @@ void Brewer::Module::ForEach(const std::function<void(GlobalValue*)>& consumer) 
     for (const auto& global : m_SymbolTable)
         consumer(global);
 }
+
+void Brewer::Module::ValidateAndOptimize()
+{
+    // remove empty (unused!) blocks
+    for (const auto& global : m_SymbolTable)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(global))
+            for (unsigned i = 0; i < fun->GetNumBlocks();)
+                if (fun->GetBlock(i)->IsEmpty() && fun->GetBlock(i)->GetNumUses() == 0)
+                    fun->EraseBlock(i);
+                else ++i;
+
+    // remove unused global variables (local linkage only)
+    for (auto it = m_SymbolTable.begin(); it != m_SymbolTable.end(); ++it)
+        if (const auto var = dynamic_cast<GlobalVariable*>(*it))
+            if (var->GetLinkage() == GlobalValue::Linkage_Local && var->GetNumUses() == 0)
+                m_SymbolTable.erase(it--);
+
+    // remove unused global functions (local linkage or totally extern)
+    for (auto it = m_SymbolTable.begin(); it != m_SymbolTable.end(); ++it)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(*it))
+            if ((fun->GetLinkage() == GlobalValue::Linkage_Local || fun->IsEmpty()) && fun->GetNumUses() == 0)
+                m_SymbolTable.erase(it--);
+
+    // validate that there are no unresolved blocks
+    for (const auto& global : m_SymbolTable)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(global))
+            if (fun->HasUnresolved())
+                Error("function has unresolved blocks: {}", fun);
+
+    // validate that every block has a terminator (br | ret)
+    for (const auto& global : m_SymbolTable)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(global))
+            for (unsigned i = 0; i < fun->GetNumBlocks(); ++i)
+            {
+                const auto block = fun->GetBlock(i);
+                if (!block->IsEmpty() && block->GetValue(block->GetNumValues() - 1)->IsTerminator()) continue;
+                Error("block is missing a terminator instruction like br or ret: {}", block);
+            }
+
+    // remove unused assignments
+    for (const auto& global : m_SymbolTable)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(global))
+            for (unsigned i = 0; i < fun->GetNumBlocks(); ++i)
+            {
+                const auto block = fun->GetBlock(i);
+                for (unsigned j = 0; j < block->GetNumValues(); ++j)
+                    if (const auto assign = dynamic_cast<Assignment*>(block->GetValue(j)))
+                        if (assign->GetDst()->GetNumUses() == 0)
+                        {
+                            block->Replace(assign, assign->GetSrc());
+                            assign->GetSrc()->RemoveUse(assign);
+                        }
+            }
+
+    // remove ineffective values (like standalone add instruction)
+    for (const auto& global : m_SymbolTable)
+        if (const auto fun = dynamic_cast<GlobalFunction*>(global))
+            for (unsigned i = 0; i < fun->GetNumBlocks(); ++i)
+            {
+                const auto block = fun->GetBlock(i);
+                for (unsigned j = 0; j < block->GetNumValues(); ++j)
+                {
+                    const auto value = block->GetValue(j);
+                    if (value->GetNumUses() == 0 && value->NeedsDestination())
+                    {
+                        block->Erase(value);
+                        --j;
+                    }
+                }
+            }
+}

@@ -6,13 +6,18 @@ Brewer::NamedValue::NamedValue(Type* type, std::string name)
 {
 }
 
+std::string Brewer::NamedValue::GetName() const
+{
+    return m_Name;
+}
+
+bool Brewer::NamedValue::NeedsDestination() const
+{
+    return true;
+}
+
 std::ostream& Brewer::NamedValue::PrintOperandIR(std::ostream& os, const bool omit_type) const
 {
     if (!omit_type) GetType()->Print(os) << ' ';
     return os << '%' << GetName();
-}
-
-std::string Brewer::NamedValue::GetName() const
-{
-    return m_Name;
 }

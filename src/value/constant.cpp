@@ -4,3 +4,8 @@ Brewer::Constant::Constant(Type* type)
     : Value(type)
 {
 }
+
+bool Brewer::Constant::NeedsDestination() const
+{
+    return true;
+}

@@ -7,7 +7,7 @@ Brewer::Assignment* Brewer::Parser::ParseAssignment()
     const auto name = Expect(TokenType_LocalId).Str;
     Expect("=");
     const auto type = ParseType();
-    const auto dest = m_Parent->Get(type, name);
-    const auto value = ParseValue(type);
-    return new Assignment(dest, value);
+    const auto dst = m_Parent->Get(type, name);
+    const auto src = ParseValue(type);
+    return new Assignment(dst, src);
 }

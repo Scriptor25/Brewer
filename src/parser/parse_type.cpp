@@ -35,8 +35,9 @@ Brewer::Type* Brewer::Parser::ParseType()
     }
     else if (At(TokenType_Id))
     {
-        const auto name = Skip().Str;
-        if (name.front() == 'i')
+        if (const auto name = Skip().Str; name == "void")
+            result_type = m_Dest.GetContext().GetVoidType();
+        else if (name.front() == 'i')
         {
             const auto bits = std::stoi(name.substr(1));
             result_type = m_Dest.GetContext().GetIntNType(bits);

@@ -19,6 +19,11 @@ Brewer::GlobalValue::Linkage Brewer::GlobalValue::GetLinkage() const
     return m_Linkage;
 }
 
+bool Brewer::GlobalValue::NeedsDestination() const
+{
+    return true;
+}
+
 Brewer::GlobalValue::Linkage Brewer::ToLinkage(const std::string& str)
 {
     static std::map<std::string, GlobalValue::Linkage> map
@@ -28,4 +33,15 @@ Brewer::GlobalValue::Linkage Brewer::ToLinkage(const std::string& str)
         {"global", GlobalValue::Linkage_Global},
     };
     return map[str];
+}
+
+std::string Brewer::ToString(GlobalValue::Linkage linkage)
+{
+    static std::map<GlobalValue::Linkage, std::string> map
+    {
+        {GlobalValue::Linkage_Local, "local"},
+        {GlobalValue::Linkage_Weak, "weak"},
+        {GlobalValue::Linkage_Global, "global"},
+    };
+    return map[linkage];
 }

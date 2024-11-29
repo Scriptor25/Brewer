@@ -8,7 +8,9 @@ namespace Brewer
     class Constant : public Value
     {
     public:
-        Constant(Type* type);
+        explicit Constant(Type* type);
+
+        bool NeedsDestination() const override;
     };
 
     class ConstantInt : public Constant
@@ -16,9 +18,9 @@ namespace Brewer
     public:
         ConstantInt(IntType* type, uint64_t val);
 
-        uint64_t GetVal() const;
+        [[nodiscard]] uint64_t GetVal() const;
 
-        bool NotNull() const override;
+        [[nodiscard]] bool NotNull() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -30,9 +32,9 @@ namespace Brewer
     public:
         ConstantFloat(FloatType* type, double val);
 
-        double GetVal() const;
+        [[nodiscard]] double GetVal() const;
 
-        bool NotNull() const override;
+        [[nodiscard]] bool NotNull() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -46,8 +48,6 @@ namespace Brewer
 
         [[nodiscard]] Constant* GetVal(unsigned i) const;
         [[nodiscard]] unsigned GetNumVals() const;
-
-        void Replace(Value* old_value, Value* new_value) override;
 
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
