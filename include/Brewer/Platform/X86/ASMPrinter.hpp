@@ -134,7 +134,7 @@ namespace Brewer::Platform::X86
 
         std::map<Value*, int64_t> m_Offsets;
         int64_t m_Offset = 0;
-        int64_t m_Top = 0;
+        int64_t m_TopOffset = 0;
 
         Storage m_LastSrc;
         Storage m_LastDst;

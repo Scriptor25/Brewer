@@ -94,7 +94,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
         if (const auto rem = bytes % 0x10)
             bytes += 0x10 - rem;
 
-        m_Top = static_cast<int64_t>(bytes);
+        m_TopOffset = static_cast<int64_t>(bytes);
 
         const Storage imm(bytes);
         Sub(imm, rsp, 8);

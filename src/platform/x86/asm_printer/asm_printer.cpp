@@ -236,7 +236,7 @@ void Brewer::Platform::X86::ASMPrinter::BeginFrame()
     ClearLast();
     m_Offsets.clear();
     m_Offset = 0;
-    m_Top = 0;
+    m_TopOffset = 0;
 }
 
 int64_t Brewer::Platform::X86::ASMPrinter::GetOffset(Value* value)
