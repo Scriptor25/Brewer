@@ -27,17 +27,17 @@ void Brewer::Platform::X86::ASMPrinter::Print(Instruction* value, const Storage&
         return;
     case Instruction::Call:
         {
+            const auto callee = value->GetOperand(0);
+            const auto args = value->GetOperandRange(1);
+
             CallConv conv;
 #ifdef _WIN32
             conv = MS_X64;
 #else
             conv = SYSTEM_V;
 #endif
-            if (value->GetMeta("ms_x64")) conv = MS_X64;
-            if (value->GetMeta("system_v")) conv = SYSTEM_V;
-
-            const auto callee = value->GetOperand(0);
-            const auto args = value->GetOperandRange(1);
+            if (callee->GetMeta("ms_x64")) conv = MS_X64;
+            if (callee->GetMeta("system_v")) conv = SYSTEM_V;
 
             auto displacement = m_TopOffset;
             for (unsigned i = args.size(); i > 0; --i)
