@@ -4,7 +4,6 @@ var @message = [i8 x 14] "Hello, world!\00"
 var @name = [i8 x 6] "Felix\00"
 var @fmt = [i8 x 23] "{ age: %d, name: %s }\0A\00"
 
-fun void @__main()
 fun i32 @puts([i8] %str)
 fun i32 @printf([i8] %fmt, ...)
 
@@ -33,8 +32,6 @@ fun [i8] local @get_name([person] %this) {
 }
 
 fun i32 @main(i32 %argc, [[i8]] %argv) {
-    call [void()] @__main
-
     %msg_str = [i8] gep [[i8 x 14]] @message
     %bar = [i32([i8])] call [[i32([i8])]()] @foo
     call [i32([i8])] %bar, [i8] %msg_str
