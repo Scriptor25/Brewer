@@ -18,7 +18,7 @@ unsigned Brewer::StructType::GetElementOffset(const unsigned i) const
 {
     unsigned offset = 0;
     for (unsigned n = 0; n < i; ++n)
-        offset += m_ElementTypes[n]->CountBytes();
+        offset += m_ElementTypes[n]->GetNumBytes();
     return offset;
 }
 
@@ -43,10 +43,10 @@ std::ostream& Brewer::StructType::Print(std::ostream& os) const
     return os << " }";
 }
 
-unsigned Brewer::StructType::CountBytes() const
+unsigned Brewer::StructType::GetNumBytes() const
 {
     unsigned bytes = 0;
     for (const auto& ty : m_ElementTypes)
-        bytes += ty->CountBytes();
+        bytes += ty->GetNumBytes();
     return bytes;
 }

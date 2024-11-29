@@ -11,7 +11,7 @@ std::string Brewer::NamedValue::GetName() const
     return m_Name;
 }
 
-bool Brewer::NamedValue::NeedsDestination() const
+bool Brewer::NamedValue::RequiresDestination() const
 {
     return true;
 }

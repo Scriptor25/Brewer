@@ -15,7 +15,7 @@ namespace Brewer
         [[nodiscard]] Context& GetContext() const;
         [[nodiscard]] std::string GetFilename() const;
 
-        void Print(Printer* printer);
+        void Print(ASMPrinterBase* printer);
         std::ostream& PrintIR(std::ostream& os) const;
 
         void Append(GlobalValue* value);

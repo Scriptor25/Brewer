@@ -4,13 +4,12 @@
 #include <Brewer/Context.hpp>
 #include <Brewer/Module.hpp>
 #include <Brewer/Parser.hpp>
-#include <Brewer/Printer/IRPrinter.hpp>
-#include <Brewer/Printer/X86Printer.hpp>
+#include <Brewer/Platform/X86/ASMPrinter.hpp>
 
-int main()
+int main(const int argc, const char* const* argv)
 {
-    constexpr auto input = "example/example.b";
-    constexpr auto output = "example/example.s";
+    const auto input = argv[1];
+    const auto output = argv[2];
 
     Brewer::Context context;
     Brewer::Module module(context, input);
@@ -22,7 +21,7 @@ int main()
     module.ValidateAndOptimize();
 
     std::ofstream os(output);
-    Brewer::X86Printer printer(os);
+    Brewer::Platform::X86::ASMPrinter printer(os);
     module.Print(&printer);
     os.close();
 }

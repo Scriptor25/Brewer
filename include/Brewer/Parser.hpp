@@ -77,43 +77,43 @@ namespace Brewer
     };
 }
 
-namespace std
+template <>
+struct std::formatter<Brewer::TokenType> : std::formatter<std::string>
 {
-    template <>
-    struct formatter<Brewer::TokenType> : formatter<string>
+    template <typename FormatContext>
+    auto format(const Brewer::TokenType type, FormatContext& ctx) const
     {
-        template <typename FormatContext>
-        auto format(Brewer::TokenType type, FormatContext& ctx) const
+        std::string str;
+        switch (type)
         {
-            std::string str;
-            switch (type)
-            {
-            case Brewer::TokenType_Eof:
-                str = "Eof";
-                break;
-            case Brewer::TokenType_Id:
-                str = "Id";
-                break;
-            case Brewer::TokenType_GlobalId:
-                str = "GlobalId";
-                break;
-            case Brewer::TokenType_LocalId:
-                str = "LocalId";
-                break;
-            case Brewer::TokenType_Int:
-                str = "Int";
-                break;
-            case Brewer::TokenType_Float:
-                str = "Float";
-                break;
-            case Brewer::TokenType_String:
-                str = "String";
-                break;
-            case Brewer::TokenType_Other:
-                str = "Other";
-                break;
-            }
-            return formatter<string>::format(str, ctx);
+        case Brewer::TokenType_Eof:
+            str = "Eof";
+            break;
+        case Brewer::TokenType_Id:
+            str = "Id";
+            break;
+        case Brewer::TokenType_GlobalId:
+            str = "GlobalId";
+            break;
+        case Brewer::TokenType_LocalId:
+            str = "LocalId";
+            break;
+        case Brewer::TokenType_Meta:
+            str = "Meta";
+            break;
+        case Brewer::TokenType_Int:
+            str = "Int";
+            break;
+        case Brewer::TokenType_Float:
+            str = "Float";
+            break;
+        case Brewer::TokenType_String:
+            str = "String";
+            break;
+        case Brewer::TokenType_Other:
+            str = "Other";
+            break;
         }
-    };
-}
+        return std::formatter<std::string>::format(str, ctx);
+    }
+};

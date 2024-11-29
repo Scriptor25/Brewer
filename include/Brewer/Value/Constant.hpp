@@ -10,7 +10,7 @@ namespace Brewer
     public:
         explicit Constant(Type* type);
 
-        bool NeedsDestination() const override;
+        [[nodiscard]] bool RequiresDestination() const override;
     };
 
     class ConstantInt : public Constant

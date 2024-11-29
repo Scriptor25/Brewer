@@ -1,10 +1,10 @@
 #include <Brewer/Type.hpp>
-#include <Brewer/Printer/X86Printer.hpp>
+#include <Brewer/Platform/X86/ASMPrinter.hpp>
 #include <Brewer/Value/Constant.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 #include <Brewer/Value/NamedValue.hpp>
 
-void Brewer::X86Printer::PrintGlobal(Value* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(Value* value)
 {
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return PrintGlobal(ptr);
@@ -12,7 +12,7 @@ void Brewer::X86Printer::PrintGlobal(Value* value)
     Error("X86Printer::PrintGlobal(Value*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintGlobal(NamedValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(NamedValue* value)
 {
     if (const auto ptr = dynamic_cast<GlobalValue*>(value))
         return PrintGlobal(ptr);
@@ -22,7 +22,7 @@ void Brewer::X86Printer::PrintGlobal(NamedValue* value)
     Error("X86Printer::PrintGlobal(NamedValue*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintGlobal(GlobalValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalValue* value)
 {
     if (const auto ptr = dynamic_cast<GlobalVariable*>(value))
         return PrintGlobal(ptr);
@@ -32,7 +32,7 @@ void Brewer::X86Printer::PrintGlobal(GlobalValue* value)
     Error("X86Printer::PrintGlobal(GlobalValue*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintGlobal(GlobalVariable* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalVariable* value)
 {
     S() << ".section .data" << std::endl;
     switch (value->GetLinkage())
@@ -59,7 +59,7 @@ void Brewer::X86Printer::PrintGlobal(GlobalVariable* value)
     S() << std::endl;
 }
 
-void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
 {
     S() << ".section .text" << std::endl;
     switch (value->GetLinkage())
@@ -89,12 +89,12 @@ void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
     const Storage rbp(RBP);
     const Storage rsp(RSP);
 
-    push(rbp, 8);
+    asm_push(rbp, 8);
     S() << ".seh_pushreg %rbp" << std::endl;
-    mov(rsp, rbp, 8);
+    asm_mov(rsp, rbp, 8);
     S() << ".seh_setframe %rbp, 0" << std::endl;
 
-    if (uint64_t bytes = value->CountAlloca())
+    if (uint64_t bytes = value->GetNumAllocaBytes())
     {
         if (const auto rem = bytes % 0x10)
             bytes += 0x10 - rem;
@@ -102,7 +102,7 @@ void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
         m_Top = bytes;
 
         const Storage imm(bytes);
-        sub(imm, rsp, 8);
+        asm_sub(imm, rsp, 8);
 
         S() << ".seh_stackalloc " << bytes << std::endl;
     }
@@ -116,10 +116,10 @@ void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
         m_Offsets[arg] = offset;
         if (i < CALL_REGISTERS.size())
         {
-            const auto bytes = arg->GetType()->CountBytes();
+            const auto bytes = arg->GetType()->GetNumBytes();
             const Storage reg(CALL_REGISTERS[i]);
-            const Storage storage(0, offset, RBP, NLL, 0);
-            mov(reg, storage, bytes);
+            const Storage storage(0, offset, RBP, ZERO, 0);
+            asm_mov(reg, storage, bytes);
         }
     }
 
@@ -129,7 +129,7 @@ void Brewer::X86Printer::PrintGlobal(GlobalFunction* value)
     S() << ".seh_endproc" << std::endl;
 }
 
-void Brewer::X86Printer::PrintGlobal(FunctionBlock* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(FunctionBlock* value)
 {
     if (!value->GetName().empty())
         S() << ".L" << value->GetIndex() << ':' << std::endl;

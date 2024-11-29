@@ -15,7 +15,7 @@ std::ostream& Brewer::IntType::Print(std::ostream& os) const
     return os << 'i' << m_Bits;
 }
 
-unsigned Brewer::IntType::CountBytes() const
+unsigned Brewer::IntType::GetNumBytes() const
 {
     return m_Bits / 8;
 }

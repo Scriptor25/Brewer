@@ -27,7 +27,7 @@ std::ostream& Brewer::ArrayType::Print(std::ostream& os) const
     return m_ElementType->Print(os << '[') << " x " << m_NumElements << ']';
 }
 
-unsigned Brewer::ArrayType::CountBytes() const
+unsigned Brewer::ArrayType::GetNumBytes() const
 {
-    return m_NumElements * m_ElementType->CountBytes();
+    return m_NumElements * m_ElementType->GetNumBytes();
 }

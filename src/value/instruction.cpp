@@ -59,7 +59,7 @@ bool Brewer::Instruction::IsTerminator() const
     }
 }
 
-bool Brewer::Instruction::NeedsDestination() const
+bool Brewer::Instruction::RequiresDestination() const
 {
     switch (m_Code)
     {
@@ -74,7 +74,7 @@ bool Brewer::Instruction::NeedsDestination() const
     }
 }
 
-uint64_t Brewer::Instruction::CountAlloca() const
+uint64_t Brewer::Instruction::GetNumAllocaBytes() const
 {
     uint64_t bytes = 0;
     switch (m_Code)
@@ -85,7 +85,7 @@ uint64_t Brewer::Instruction::CountAlloca() const
         break;
 
     case Alloca:
-        bytes = GetType()->GetElementType()->CountBytes();
+        bytes = GetType()->GetElementType()->GetNumBytes();
         bytes *= dynamic_cast<ConstantInt*>(m_Operands[0])->GetVal();
         if (const auto rem = bytes % 0x10)
             bytes += 0x10 - rem;

@@ -15,7 +15,7 @@ std::ostream& Brewer::VoidType::Print(std::ostream& os) const
     return os << "void";
 }
 
-unsigned Brewer::VoidType::CountBytes() const
+unsigned Brewer::VoidType::GetNumBytes() const
 {
     return 0;
 }

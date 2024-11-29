@@ -1,7 +1,7 @@
-#include <Brewer/Printer/X86Printer.hpp>
+#include <Brewer/Platform/X86/ASMPrinter.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-void Brewer::X86Printer::PrintCallee(Value* value)
+void Brewer::Platform::X86::ASMPrinter::PrintCallee(Value* value)
 {
     if (const auto ptr = dynamic_cast<NamedValue*>(value))
         return PrintCallee(ptr);
@@ -9,7 +9,7 @@ void Brewer::X86Printer::PrintCallee(Value* value)
     Error("X86Printer::PrintCallee(Value*) not implemented: {}", value);
 }
 
-void Brewer::X86Printer::PrintCallee(NamedValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintCallee(NamedValue* value)
 {
     if (const auto ptr = dynamic_cast<GlobalValue*>(value))
         return PrintCallee(ptr);
@@ -19,12 +19,12 @@ void Brewer::X86Printer::PrintCallee(NamedValue* value)
     S() << '*' << GetOffset(value) << "(%rbp)";
 }
 
-void Brewer::X86Printer::PrintCallee(GlobalValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintCallee(GlobalValue* value)
 {
     S() << value->GetName();
 }
 
-void Brewer::X86Printer::PrintCallee(FunctionBlock* value)
+void Brewer::Platform::X86::ASMPrinter::PrintCallee(FunctionBlock* value)
 {
     S() << ".L" << value->GetIndex();
 }

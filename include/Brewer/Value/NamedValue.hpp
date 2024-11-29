@@ -8,9 +8,10 @@ namespace Brewer
     {
     public:
         NamedValue(Type* type, std::string name);
+
         [[nodiscard]] std::string GetName() const;
 
-        bool NeedsDestination() const override;
+        [[nodiscard]] bool RequiresDestination() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -30,10 +31,11 @@ namespace Brewer
 
         [[nodiscard]] Value* GetValue(unsigned i) const;
         [[nodiscard]] unsigned GetNumValues() const;
+        [[nodiscard]] bool IsEmpty() const;
 
-        bool IsEmpty() const;
         void Append(Value* value);
         void Erase(Value* value);
+
         NamedValue* Get(Type* type, const std::string& name) const;
 
         void Replace(Value* old_value, Value* new_value) override;

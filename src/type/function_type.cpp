@@ -56,7 +56,7 @@ std::ostream& Brewer::FunctionType::Print(std::ostream& os) const
     return os << ')';
 }
 
-unsigned Brewer::FunctionType::CountBytes() const
+unsigned Brewer::FunctionType::GetNumBytes() const
 {
     return 0;
 }

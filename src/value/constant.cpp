@@ -5,7 +5,7 @@ Brewer::Constant::Constant(Type* type)
 {
 }
 
-bool Brewer::Constant::NeedsDestination() const
+bool Brewer::Constant::RequiresDestination() const
 {
     return true;
 }

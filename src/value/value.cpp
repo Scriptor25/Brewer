@@ -71,12 +71,12 @@ bool Brewer::Value::IsTerminator() const
     return false;
 }
 
-bool Brewer::Value::NeedsDestination() const
+bool Brewer::Value::RequiresDestination() const
 {
     return false;
 }
 
-uint64_t Brewer::Value::CountAlloca() const
+uint64_t Brewer::Value::GetNumAllocaBytes() const
 {
     return 0;
 }

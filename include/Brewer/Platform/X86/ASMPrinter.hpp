@@ -2,18 +2,19 @@
 
 #include <cstdint>
 #include <map>
-#include <Brewer/Printer/Printer.hpp>
+#include <vector>
+#include <Brewer/Brewer.hpp>
+#include <Brewer/Printer.hpp>
 
-namespace Brewer
+namespace Brewer::Platform::X86
 {
-    class X86Printer : public Printer
+    class ASMPrinter : public ASMPrinterBase
     {
-    public:
         enum Register
         {
-            NLL,
+            ZERO,
 
-            RAX, RBX, RCX, RDX, RSI, RDI, RSP, RBP,
+            RA, RB, RC, RD, RSI, RDI, RSP, RBP,
             R8, R9, R10, R11, R12, R13, R14, R15,
         };
 
@@ -27,7 +28,7 @@ namespace Brewer
             explicit Storage(Register reg);
             Storage(int64_t segment, int64_t displacement, Register base, Register index, int64_t scale);
 
-            void Print(const X86Printer& printer, unsigned bytes) const;
+            void Print(const ASMPrinter& printer, unsigned bytes) const;
             explicit operator bool() const;
 
             bool Valid = false;
@@ -35,44 +36,50 @@ namespace Brewer
             bool Direct = false;
             int64_t Segment = 0;
             int64_t Displacement = 0;
-            Register Base = NLL;
-            Register Index = NLL;
+            Register Base = ZERO;
+            Register Index = ZERO;
             int64_t Scale = 0;
         };
 
-        explicit X86Printer(std::ostream& stream);
+        static std::string to_string(Register reg, unsigned bytes);
 
-        void Print(Module* module) override;
+        static const std::vector<Register> CALL_REGISTERS;
+
+    public:
+        explicit ASMPrinter(std::ostream& stream);
+
+        void Print(Module& module) override;
         void Print(Value* value) override;
 
     private:
-        bool can_omit_mov(const Storage& src, const Storage& dst);
-        void set_last(const Storage& src, const Storage& dst);
-        void clear_last();
-        void op(const std::string& name, const std::vector<Storage>& operands, unsigned bytes);
-        void mov(const Storage& src, const Storage& dst, unsigned bytes);
-        void push(const Storage& src, unsigned bytes);
-        void pop(const Storage& dst, unsigned bytes);
-        void add(const Storage& src, const Storage& dst, unsigned bytes);
-        void sub(const Storage& src, const Storage& dst, unsigned bytes);
-        void imul(const Storage& src, const Storage& dst, unsigned bytes);
-        void cmp(const Storage& l, const Storage& r, unsigned bytes);
-        void lea(const Storage& src, const Storage& dst, unsigned bytes);
+        bool CanOmitMov(const Storage& src, const Storage& dst);
+        void SetLast(const Storage& src, const Storage& dst);
+        void ClearLast();
 
-        void op(const std::string& name, Value* value, const Storage& dst = {});
-        void mov(Value* value, const Storage& dst);
-        void push(Value* value);
-        void pop(Value* value);
-        void add(Value* value, const Storage& dst);
-        void sub(Value* value, const Storage& dst);
-        void imul(Value* value, const Storage& dst);
-        void cmp(Value* value, const Storage& dst);
-        void lea(Value* value, const Storage& dst);
+        void asm_op(const std::string& name, const std::vector<Storage>& operands, unsigned bytes);
+        void asm_mov(const Storage& src, const Storage& dst, unsigned bytes);
+        void asm_push(const Storage& src, unsigned bytes);
+        void asm_pop(const Storage& dst, unsigned bytes);
+        void asm_add(const Storage& src, const Storage& dst, unsigned bytes);
+        void asm_sub(const Storage& src, const Storage& dst, unsigned bytes);
+        void asm_imul(const Storage& src, const Storage& dst, unsigned bytes);
+        void asm_cmp(const Storage& l, const Storage& r, unsigned bytes);
+        void asm_lea(const Storage& src, const Storage& dst, unsigned bytes);
 
-        void ret() const;
-        void call(Value* value, const Storage& dst);
-        void jmp(Value* value);
-        void jl(Value* value);
+        void asm_op(const std::string& name, Value* value, const Storage& dst = {});
+        void asm_mov(Value* value, const Storage& dst);
+        void asm_push(Value* value);
+        void asm_pop(Value* value);
+        void asm_add(Value* value, const Storage& dst);
+        void asm_sub(Value* value, const Storage& dst);
+        void asm_imul(Value* value, const Storage& dst);
+        void asm_cmp(Value* value, const Storage& dst);
+        void asm_lea(Value* value, const Storage& dst);
+
+        void asm_ret() const;
+        void asm_call(Value* value, const Storage& dst);
+        void asm_jmp(Value* value);
+        void asm_jl(Value* value);
 
         void BeginFrame();
         int64_t GetOffset(Value* value);
@@ -117,8 +124,6 @@ namespace Brewer
         void PrintCallee(NamedValue* value);
         void PrintCallee(FunctionBlock* value);
         void PrintCallee(GlobalValue* value);
-
-        static const std::vector<Register> CALL_REGISTERS;
 
         std::map<Value*, int64_t> m_Offsets;
         int64_t m_Offset = 0;

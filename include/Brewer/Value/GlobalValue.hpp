@@ -15,9 +15,10 @@ namespace Brewer
         };
 
         GlobalValue(Type* type, std::string name, Linkage linkage);
+
         [[nodiscard]] Linkage GetLinkage() const;
 
-        bool NeedsDestination() const override;
+        [[nodiscard]] bool RequiresDestination() const override;
         std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
 
     private:
@@ -28,6 +29,7 @@ namespace Brewer
     {
     public:
         GlobalVariable(Type* type, std::string name, Linkage linkage, Constant* init);
+
         [[nodiscard]] Constant* GetInit() const;
 
         std::ostream& PrintIR(std::ostream& os) const override;
@@ -40,17 +42,19 @@ namespace Brewer
     {
     public:
         GlobalFunction(FunctionType* type, std::string name, Linkage linkage, std::vector<FunctionArg*> args);
+
         [[nodiscard]] FunctionArg* GetArg(unsigned i) const;
         [[nodiscard]] unsigned GetNumArgs() const;
         [[nodiscard]] FunctionBlock* GetBlock(unsigned i) const;
         [[nodiscard]] unsigned GetNumBlocks() const;
         [[nodiscard]] bool IsEmpty() const;
+        [[nodiscard]] bool HasUnresolved() const;
+
         void Append(Value* value);
         void EraseBlock(unsigned i);
-        bool HasUnresolved() const;
         NamedValue* Get(Type* type, const std::string& name);
 
-        [[nodiscard]] uint64_t CountAlloca() const override;
+        [[nodiscard]] uint64_t GetNumAllocaBytes() const override;
         std::ostream& PrintIR(std::ostream& os) const override;
 
     private:

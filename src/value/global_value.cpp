@@ -19,7 +19,7 @@ Brewer::GlobalValue::Linkage Brewer::GlobalValue::GetLinkage() const
     return m_Linkage;
 }
 
-bool Brewer::GlobalValue::NeedsDestination() const
+bool Brewer::GlobalValue::RequiresDestination() const
 {
     return true;
 }

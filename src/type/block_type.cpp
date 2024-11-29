@@ -15,7 +15,7 @@ std::ostream& Brewer::BlockType::Print(std::ostream& os) const
     return os;
 }
 
-unsigned Brewer::BlockType::CountBytes() const
+unsigned Brewer::BlockType::GetNumBytes() const
 {
     return 0;
 }

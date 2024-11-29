@@ -36,6 +36,11 @@ bool Brewer::GlobalFunction::IsEmpty() const
     return GetNumBlocks() == 0;
 }
 
+bool Brewer::GlobalFunction::HasUnresolved() const
+{
+    return !m_Unresolved.empty();
+}
+
 void Brewer::GlobalFunction::Append(Value* value)
 {
     if (const auto block = dynamic_cast<FunctionBlock*>(value))
@@ -62,11 +67,6 @@ void Brewer::GlobalFunction::EraseBlock(const unsigned i)
     m_Blocks.erase(m_Blocks.begin() + i);
 }
 
-bool Brewer::GlobalFunction::HasUnresolved() const
-{
-    return !m_Unresolved.empty();
-}
-
 Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& name)
 {
     if (const auto block_type = dynamic_cast<BlockType*>(type))
@@ -86,17 +86,17 @@ Brewer::NamedValue* Brewer::GlobalFunction::Get(Type* type, const std::string& n
     return m_Locals.emplace_back() = local;
 }
 
-uint64_t Brewer::GlobalFunction::CountAlloca() const
+uint64_t Brewer::GlobalFunction::GetNumAllocaBytes() const
 {
     uint64_t bytes = 0;
     uint64_t max_shadow = 0;
     for (const auto local : m_Locals)
-        bytes += local->GetType()->CountBytes();
+        bytes += local->GetType()->GetNumBytes();
     for (const auto block : m_Blocks)
         for (unsigned i = 0; i < block->GetNumValues(); ++i)
         {
             const auto value = block->GetValue(i);
-            const auto b = value->CountAlloca();
+            const auto b = value->GetNumAllocaBytes();
             if (const auto inst = dynamic_cast<Instruction*>(value);
                 inst && inst->GetCode() == Instruction::Call && b > max_shadow)
                 max_shadow = b;

@@ -1,7 +1,7 @@
 #include <Brewer/Type.hpp>
-#include <Brewer/Printer/X86Printer.hpp>
+#include <Brewer/Platform/X86/ASMPrinter.hpp>
 
-void Brewer::X86Printer::PrintType(Type* type)
+void Brewer::Platform::X86::ASMPrinter::PrintType(Type* type)
 {
     if (const auto ptr = dynamic_cast<IntType*>(type))
         return PrintType(ptr);
@@ -15,7 +15,7 @@ void Brewer::X86Printer::PrintType(Type* type)
     Error("X86Printer::Print(Type*) not implemented: {}", type);
 }
 
-void Brewer::X86Printer::PrintType(IntType* type)
+void Brewer::Platform::X86::ASMPrinter::PrintType(IntType* type)
 {
     switch (type->GetBits())
     {
@@ -39,7 +39,7 @@ void Brewer::X86Printer::PrintType(IntType* type)
     Error("X86Printer::Print(IntType*) not implemented: {}", type);
 }
 
-void Brewer::X86Printer::PrintType(FloatType* type)
+void Brewer::Platform::X86::ASMPrinter::PrintType(FloatType* type)
 {
     switch (type->GetBits())
     {
@@ -57,12 +57,12 @@ void Brewer::X86Printer::PrintType(FloatType* type)
     Error("X86Printer::Print(FloatType*) not implemented: {}", type);
 }
 
-void Brewer::X86Printer::PrintType(PointerType*)
+void Brewer::Platform::X86::ASMPrinter::PrintType(PointerType*)
 {
     S() << ".quad";
 }
 
-void Brewer::X86Printer::PrintType(ArrayType*)
+void Brewer::Platform::X86::ASMPrinter::PrintType(ArrayType*)
 {
     S() << ".quad";
 }

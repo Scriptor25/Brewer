@@ -16,23 +16,23 @@ namespace Brewer
 
         Type(Context& context, unsigned hash);
 
-        Context& GetContext() const;
-        unsigned GetHash() const;
+        [[nodiscard]] Context& GetContext() const;
+        [[nodiscard]] unsigned GetHash() const;
         Type* GetBaseType();
 
         virtual ~Type() = default;
 
-        virtual unsigned GetBits() const;
-        virtual Type* GetElementType() const;
-        virtual Type* GetElementType(unsigned i) const;
-        virtual unsigned GetNumElements() const;
-        virtual Type* GetResultType() const;
-        virtual Type* GetArgType(unsigned i) const;
-        virtual unsigned GetNumArgs() const;
-        virtual bool IsVarArg() const;
+        [[nodiscard]] virtual unsigned GetBits() const;
+        [[nodiscard]] virtual Type* GetElementType() const;
+        [[nodiscard]] virtual Type* GetElementType(unsigned i) const;
+        [[nodiscard]] virtual unsigned GetNumElements() const;
+        [[nodiscard]] virtual Type* GetResultType() const;
+        [[nodiscard]] virtual Type* GetArgType(unsigned i) const;
+        [[nodiscard]] virtual unsigned GetNumArgs() const;
+        [[nodiscard]] virtual bool IsVarArg() const;
 
         virtual std::ostream& Print(std::ostream& os) const = 0;
-        virtual unsigned CountBytes() const = 0;
+        [[nodiscard]] virtual unsigned GetNumBytes() const = 0;
 
     private:
         Context& m_Context;
@@ -47,7 +47,7 @@ namespace Brewer
         VoidType(Context& context, unsigned hash);
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
     };
 
     class BlockType : public Type
@@ -58,7 +58,7 @@ namespace Brewer
         BlockType(Context& context, unsigned hash);
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
     };
 
     class IntType : public Type
@@ -68,10 +68,10 @@ namespace Brewer
 
         IntType(Context& context, unsigned hash, unsigned bits);
 
-        unsigned GetBits() const override;
+        [[nodiscard]] unsigned GetBits() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         unsigned m_Bits;
@@ -84,10 +84,10 @@ namespace Brewer
 
         FloatType(Context& context, unsigned hash, unsigned bits);
 
-        unsigned GetBits() const override;
+        [[nodiscard]] unsigned GetBits() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         unsigned m_Bits;
@@ -100,10 +100,10 @@ namespace Brewer
 
         PointerType(Context& context, unsigned hash, Type* element_type);
 
-        Type* GetElementType() const override;
+        [[nodiscard]] Type* GetElementType() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         Type* m_ElementType;
@@ -116,11 +116,11 @@ namespace Brewer
 
         ArrayType(Context& context, unsigned hash, Type* element_type, unsigned num_elements);
 
-        Type* GetElementType() const override;
-        unsigned GetNumElements() const override;
+        [[nodiscard]] Type* GetElementType() const override;
+        [[nodiscard]] unsigned GetNumElements() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         Type* m_ElementType;
@@ -134,13 +134,13 @@ namespace Brewer
 
         StructType(Context& context, unsigned hash, std::vector<Type*>&& element_types);
 
-        unsigned GetElementOffset(unsigned i) const;
+        [[nodiscard]] unsigned GetElementOffset(unsigned i) const;
 
-        Type* GetElementType(unsigned i) const override;
-        unsigned GetNumElements() const override;
+        [[nodiscard]] Type* GetElementType(unsigned i) const override;
+        [[nodiscard]] unsigned GetNumElements() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         std::vector<Type*> m_ElementTypes;
@@ -153,13 +153,13 @@ namespace Brewer
 
         FunctionType(Context& context, unsigned hash, Type* result_type, std::vector<Type*> arg_types, bool vararg);
 
-        Type* GetResultType() const override;
-        Type* GetArgType(unsigned i) const override;
-        unsigned GetNumArgs() const override;
-        bool IsVarArg() const override;
+        [[nodiscard]] Type* GetResultType() const override;
+        [[nodiscard]] Type* GetArgType(unsigned i) const override;
+        [[nodiscard]] unsigned GetNumArgs() const override;
+        [[nodiscard]] bool IsVarArg() const override;
 
         std::ostream& Print(std::ostream& os) const override;
-        unsigned CountBytes() const override;
+        [[nodiscard]] unsigned GetNumBytes() const override;
 
     private:
         Type* m_ResultType;
@@ -172,13 +172,13 @@ template <typename T>
 concept DerivedType = std::is_base_of_v<Brewer::Type, T>;
 
 template <DerivedType T>
-struct std::formatter<T*> : formatter<string>
+struct std::formatter<T*> : std::formatter<std::string>
 {
     template <typename FormatContext>
     auto format(T* type, FormatContext& ctx) const
     {
-        stringstream os;
+        std::stringstream os;
         type->Print(os);
-        return formatter<string>::format(os.str(), ctx);
+        return std::formatter<std::string>::format(os.str(), ctx);
     }
 };

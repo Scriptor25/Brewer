@@ -1,7 +1,5 @@
 #pragma once
 
-#undef NOERR
-
 #include <format>
 #include <iostream>
 #include <string>
@@ -14,10 +12,14 @@ namespace Brewer
     class Builder;
     class Parser;
 
-    class Printer;
+    class ASMPrinterBase;
     class IRPrinter;
     class RiscVPrinter;
-    class X86Printer;
+
+    namespace Platform::X86
+    {
+        class ASMPrinter;
+    }
 
     class Type;
     class VoidType;

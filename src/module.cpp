@@ -1,8 +1,8 @@
+#include <utility>
 #include <Brewer/Module.hpp>
 #include <Brewer/Type.hpp>
-#include <Brewer/Printer/Printer.hpp>
+#include <Brewer/Printer.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
-#include <utility>
 
 Brewer::Module::Module(Context& context, std::string filename)
     : m_Context(context), m_Filename(std::move(filename))
@@ -19,9 +19,9 @@ std::string Brewer::Module::GetFilename() const
     return m_Filename;
 }
 
-void Brewer::Module::Print(Printer* printer)
+void Brewer::Module::Print(ASMPrinterBase* printer)
 {
-    printer->Print(this);
+    printer->Print(*this);
 }
 
 std::ostream& Brewer::Module::PrintIR(std::ostream& os) const
@@ -127,7 +127,7 @@ void Brewer::Module::ValidateAndOptimize()
                 for (unsigned j = 0; j < block->GetNumValues(); ++j)
                 {
                     const auto value = block->GetValue(j);
-                    if (value->GetNumUses() == 0 && value->NeedsDestination())
+                    if (value->GetNumUses() == 0 && value->RequiresDestination())
                     {
                         block->Erase(value);
                         --j;

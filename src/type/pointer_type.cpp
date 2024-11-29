@@ -20,7 +20,7 @@ std::ostream& Brewer::PointerType::Print(std::ostream& os) const
     return m_ElementType->Print(os << '[') << ']';
 }
 
-unsigned Brewer::PointerType::CountBytes() const
+unsigned Brewer::PointerType::GetNumBytes() const
 {
     return 8;
 }

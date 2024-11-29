@@ -14,7 +14,7 @@ namespace Brewer
         [[nodiscard]] unsigned GetIndex() const;
         [[nodiscard]] Type* GetType() const;
 
-        uint64_t GetNumUses() const;
+        [[nodiscard]] uint64_t GetNumUses() const;
         void AddUse(Value* user);
         void RemoveUse(Value* user);
         void ReplaceWith(Value* new_value);
@@ -22,9 +22,9 @@ namespace Brewer
 
         virtual ~Value();
         [[nodiscard]] virtual bool NotNull() const;
-        virtual bool IsTerminator() const;
-        virtual bool NeedsDestination() const;
-        [[nodiscard]] virtual uint64_t CountAlloca() const;
+        [[nodiscard]] virtual bool IsTerminator() const;
+        [[nodiscard]] virtual bool RequiresDestination() const;
+        [[nodiscard]] virtual uint64_t GetNumAllocaBytes() const;
         virtual void Replace(Value* old_value, Value* new_value);
         virtual std::ostream& PrintIR(std::ostream& os) const;
         virtual std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const = 0;
@@ -84,9 +84,9 @@ namespace Brewer
         [[nodiscard]] unsigned GetNumOperands() const;
         [[nodiscard]] std::vector<Value*> GetOperandRange(unsigned beg, unsigned end = -1) const;
 
-        bool IsTerminator() const override;
-        bool NeedsDestination() const override;
-        [[nodiscard]] uint64_t CountAlloca() const override;
+        [[nodiscard]] bool IsTerminator() const override;
+        [[nodiscard]] bool RequiresDestination() const override;
+        [[nodiscard]] uint64_t GetNumAllocaBytes() const override;
         void Replace(Value* old_value, Value* new_value) override;
 
     private:
@@ -98,20 +98,17 @@ namespace Brewer
     std::string ToString(Instruction::Code code);
 }
 
-namespace std
-{
-    template <typename T>
-    concept DerivedValue = std::is_base_of_v<Brewer::Value, T>;
+template <typename T>
+concept DerivedValue = std::is_base_of_v<Brewer::Value, T>;
 
-    template <DerivedValue V>
-    struct formatter<V*> : formatter<string>
+template <DerivedValue V>
+struct std::formatter<V*> : std::formatter<std::string>
+{
+    template <typename FormatContext>
+    auto format(V* value, FormatContext& ctx) const
     {
-        template <typename FormatContext>
-        auto format(V* value, FormatContext& ctx) const
-        {
-            std::stringstream ss;
-            value->PrintOperandIR(ss, false);
-            return formatter<string>::format(ss.str(), ctx);
-        }
-    };
-}
+        std::stringstream ss;
+        value->PrintOperandIR(ss, false);
+        return std::formatter<std::string>::format(ss.str(), ctx);
+    }
+};
