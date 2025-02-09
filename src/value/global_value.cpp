@@ -3,14 +3,16 @@
 #include <Brewer/Type.hpp>
 #include <Brewer/Value/GlobalValue.hpp>
 
-Brewer::GlobalValue::GlobalValue(Type* type, std::string name, const Linkage linkage, std::vector<std::string>&& meta)
-    : NamedValue(type->GetContext().GetPointerType(type), std::move(name), std::move(meta)), m_Linkage(linkage)
+Brewer::GlobalValue::GlobalValue(Type *type, std::string name, const Linkage linkage, std::vector<std::string> &&meta)
+    : NamedValue(type->GetContext().GetPointerType(type), std::move(name), std::move(meta)),
+      m_Linkage(linkage)
 {
 }
 
-std::ostream& Brewer::GlobalValue::PrintOperandIR(std::ostream& os, const bool omit_type) const
+std::ostream &Brewer::GlobalValue::PrintOperandIR(std::ostream &os, const bool omit_type) const
 {
-    if (!omit_type) GetType()->Print(os) << ' ';
+    if (!omit_type)
+        GetType()->Print(os) << ' ';
     return os << '@' << GetName();
 }
 
@@ -24,7 +26,7 @@ bool Brewer::GlobalValue::RequiresDestination() const
     return true;
 }
 
-Brewer::GlobalValue::Linkage Brewer::ToLinkage(const std::string& str)
+Brewer::GlobalValue::Linkage Brewer::ToLinkage(const std::string &str)
 {
     static std::map<std::string, GlobalValue::Linkage> map
     {

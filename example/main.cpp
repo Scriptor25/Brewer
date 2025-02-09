@@ -6,7 +6,7 @@
 #include <Brewer/Parser.hpp>
 #include <Brewer/Platform/X86/ASMPrinter.hpp>
 
-int main(const int argc, const char* const* argv)
+int main(const int /*argc*/, const char *const *argv)
 {
     const auto input = argv[1];
     const auto output = argv[2];

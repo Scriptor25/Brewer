@@ -2,7 +2,7 @@
 #include <Brewer/Value/GlobalValue.hpp>
 #include <Brewer/Value/Value.hpp>
 
-Brewer::Assignment* Brewer::Parser::ParseAssignment()
+Brewer::Assignment *Brewer::Parser::ParseAssignment()
 {
     const auto name = Expect(TokenType_LocalId).Str;
     Expect("=");
@@ -10,6 +10,7 @@ Brewer::Assignment* Brewer::Parser::ParseAssignment()
     const auto dst = m_Parent->Get(type, name);
     const auto src = ParseValue(type);
     std::vector<std::string> meta;
-    while (At(TokenType_Meta)) meta.push_back(Skip().Str);
+    while (At(TokenType_Meta))
+        meta.push_back(Skip().Str);
     return new Assignment(dst, src, std::move(meta));
 }

@@ -1,7 +1,8 @@
 #include <Brewer/Parser.hpp>
 
-Brewer::Parser::Parser(std::istream& stream, Module& dest)
-    : m_Stream(stream), m_Dest(dest)
+Brewer::Parser::Parser(std::istream &stream, Module &dest)
+    : m_Stream(stream),
+      m_Dest(dest)
 {
     Get();
     NextToken();
@@ -22,21 +23,23 @@ bool Brewer::Parser::At(const TokenType type) const
     return m_Token.Type == type;
 }
 
-bool Brewer::Parser::At(const std::string& str) const
+bool Brewer::Parser::At(const std::string &str) const
 {
     return m_Token.Str == str;
 }
 
 bool Brewer::Parser::NextAt(const TokenType type)
 {
-    if (!At(type)) return false;
+    if (!At(type))
+        return false;
     NextToken();
     return true;
 }
 
-bool Brewer::Parser::NextAt(const std::string& str)
+bool Brewer::Parser::NextAt(const std::string &str)
 {
-    if (!At(str)) return false;
+    if (!At(str))
+        return false;
     NextToken();
     return true;
 }
@@ -55,7 +58,7 @@ Brewer::Token Brewer::Parser::Expect(const TokenType type)
     return Skip();
 }
 
-bool Brewer::Parser::Expect(const std::string& str)
+bool Brewer::Parser::Expect(const std::string &str)
 {
     if (!At(str))
         Error("expected value '{}', at '{}'", str, m_Token.Str);

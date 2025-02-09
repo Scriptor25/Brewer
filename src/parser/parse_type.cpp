@@ -4,9 +4,9 @@
 #include <Brewer/Parser.hpp>
 #include <Brewer/Type.hpp>
 
-Brewer::Type* Brewer::Parser::ParseType()
+Brewer::Type *Brewer::Parser::ParseType()
 {
-    Type* result_type{};
+    Type *result_type{};
 
     if (NextAt("["))
     {
@@ -16,12 +16,13 @@ Brewer::Type* Brewer::Parser::ParseType()
             const auto size = Expect(TokenType_Int).Int;
             result_type = m_Dest.GetContext().GetArrayType(element_type, size);
         }
-        else result_type = m_Dest.GetContext().GetPointerType(element_type);
+        else
+            result_type = m_Dest.GetContext().GetPointerType(element_type);
         Expect("]");
     }
     else if (NextAt("{"))
     {
-        std::vector<Type*> element_types;
+        std::vector<Type *> element_types;
 
         while (!At("}") && !AtEof())
         {
@@ -47,7 +48,8 @@ Brewer::Type* Brewer::Parser::ParseType()
             const auto bits = std::stoi(name.substr(1));
             result_type = m_Dest.GetContext().GetFloatNType(bits);
         }
-        else result_type = m_Dest.GetContext().GlobalType(name);
+        else
+            result_type = m_Dest.GetContext().GlobalType(name);
     }
 
     if (!result_type)
@@ -55,7 +57,7 @@ Brewer::Type* Brewer::Parser::ParseType()
 
     while (NextAt("("))
     {
-        std::vector<Type*> arg_types;
+        std::vector<Type *> arg_types;
         bool vararg = false;
 
         while (!At(")") && !AtEof())

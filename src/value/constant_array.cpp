@@ -3,12 +3,13 @@
 
 #include "Brewer/Context.hpp"
 
-Brewer::ConstantArray::ConstantArray(ArrayType* type, std::vector<Constant*> vals, std::vector<std::string>&& meta)
-    : Constant(type, std::move(meta)), m_Vals(std::move(vals))
+Brewer::ConstantArray::ConstantArray(ArrayType *type, std::vector<Constant *> vals, std::vector<std::string> &&meta)
+    : Constant(type, std::move(meta)),
+      m_Vals(std::move(vals))
 {
 }
 
-Brewer::Constant* Brewer::ConstantArray::GetVal(const unsigned i) const
+Brewer::Constant *Brewer::ConstantArray::GetVal(const unsigned i) const
 {
     return m_Vals[i];
 }
@@ -18,16 +19,17 @@ unsigned Brewer::ConstantArray::GetNumVals() const
     return m_Vals.size();
 }
 
-std::ostream& Brewer::ConstantArray::PrintOperandIR(std::ostream& os, const bool omit_type) const
+std::ostream &Brewer::ConstantArray::PrintOperandIR(std::ostream &os, const bool omit_type) const
 {
-    if (!omit_type) GetType()->Print(os) << ' ';
+    if (!omit_type)
+        GetType()->Print(os) << ' ';
 
     if (GetType()->GetElementType() == GetType()->GetContext().GetIntNType(8))
     {
         os << '"';
-        for (const auto val : m_Vals)
+        for (const auto val: m_Vals)
         {
-            const auto i = dynamic_cast<ConstantInt*>(val)->GetVal();
+            const auto i = dynamic_cast<ConstantInt *>(val)->GetVal();
             if (const auto c = static_cast<char>(i); c >= 0x20)
             {
                 os << c;
@@ -45,7 +47,8 @@ std::ostream& Brewer::ConstantArray::PrintOperandIR(std::ostream& os, const bool
     os << '[';
     for (unsigned i = 0; i < m_Vals.size(); ++i)
     {
-        if (i > 0) os << ", ";
+        if (i > 0)
+            os << ", ";
         m_Vals[i]->PrintOperandIR(os, true);
     }
     return os << ']';

@@ -1,6 +1,7 @@
 type person = { i32, [i8] }
 
 var @message = [i8 x 14] "Hello, world!\00"
+var @age = i32 18
 var @name = [i8 x 6] "Felix\00"
 var @fmt = [i8 x 23] "{ age: %d, name: %s }\0A\00"
 
@@ -37,8 +38,9 @@ fun i32 @main(i32 %argc, [[i8]] %argv) {
     call [i32([i8])] %bar, [i8] %msg_str
 
     %p_ptr = [person] alloca i64 1
-    %name_str = [i8] gep [[i8 x 6]] @name
-    call [[person]([person], i32, [i8])] @person, [person] %p_ptr, i32 18, [i8] %name_str
+    %age = i32 load [i32] @age
+    %name = [i8] gep [[i8 x 6]] @name
+    call [[person]([person], i32, [i8])] @person, [person] %p_ptr, i32 %age, [i8] %name
 
     %fmt_str = [i8] gep [[i8 x 23]] @fmt
     %p_age = i32 call [i32([person])] @get_age, [person] %p_ptr

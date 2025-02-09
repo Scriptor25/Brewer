@@ -4,12 +4,12 @@
 
 namespace Brewer::Platform::RiscV
 {
-    class ASMPrinter : public ASMPrinterBase
+    class ASMPrinter final : public ASMPrinterBase
     {
     public:
-        explicit ASMPrinter(std::ostream& stream);
+        explicit ASMPrinter(std::ostream &stream);
 
-        void Print(Module& module) override;
-        void Print(Value* value) override;
+        void Print(Module &module) override;
+        void Print(Value *value) override;
     };
 }

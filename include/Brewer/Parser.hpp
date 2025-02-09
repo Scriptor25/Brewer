@@ -29,90 +29,90 @@ namespace Brewer
     class Parser
     {
     public:
-        static void Parse(std::istream& stream, Module& dest);
+        static void Parse(std::istream &stream, Module &dest);
 
     private:
-        Parser(std::istream& stream, Module& dest);
+        Parser(std::istream &stream, Module &dest);
 
         int Get();
-        Token& NextToken();
+        Token &NextToken();
 
         [[nodiscard]] bool AtEof() const;
         [[nodiscard]] bool At(TokenType type) const;
-        [[nodiscard]] bool At(const std::string& str) const;
+        [[nodiscard]] bool At(const std::string &str) const;
 
         bool NextAt(TokenType type);
-        bool NextAt(const std::string& str);
+        bool NextAt(const std::string &str);
 
         Token Skip();
 
         Token Expect(TokenType type);
-        bool Expect(const std::string& str);
+        bool Expect(const std::string &str);
 
-        Type* ParseType();
+        Type *ParseType();
         void ParseGlobalType();
 
-        Value* ParseValue(Type* type);
-        Instruction* ParseInstruction(Type* type, const std::string& code_str);
+        Value *ParseValue(Type *type);
+        Instruction *ParseInstruction(Type *type, const std::string &code_str);
 
-        Assignment* ParseAssignment();
+        Assignment *ParseAssignment();
 
-        Constant* ParseConstant(Type* type);
-        ConstantInt* ParseConstantInt(Type* type);
-        ConstantFloat* ParseConstantFloat(Type* type);
-        ConstantArray* ParseConstantArray(Type* type);
+        Constant *ParseConstant(Type *type);
+        ConstantInt *ParseConstantInt(Type *type);
+        ConstantFloat *ParseConstantFloat(Type *type);
+        ConstantArray *ParseConstantArray(Type *type);
 
-        GlobalValue* ParseGlobalValue();
-        GlobalVariable* ParseGlobalVariable();
-        GlobalFunction* ParseGlobalFunction();
+        GlobalValue *ParseGlobalValue();
+        GlobalVariable *ParseGlobalVariable();
+        GlobalFunction *ParseGlobalFunction();
 
-        Value* ParseOperand();
+        Value *ParseOperand();
 
-        std::istream& m_Stream;
-        Module& m_Dest;
-        GlobalFunction* m_Parent{};
+        std::istream &m_Stream;
+        Module &m_Dest;
+        GlobalFunction *m_Parent{};
 
         int m_Tok;
         Token m_Token;
     };
 }
 
-template <>
+template<>
 struct std::formatter<Brewer::TokenType> : std::formatter<std::string>
 {
-    template <typename FormatContext>
-    auto format(const Brewer::TokenType type, FormatContext& ctx) const
+    template<typename FormatContext>
+    auto format(const Brewer::TokenType type, FormatContext &ctx) const
     {
         std::string str;
         switch (type)
         {
-        case Brewer::TokenType_Eof:
-            str = "Eof";
-            break;
-        case Brewer::TokenType_Id:
-            str = "Id";
-            break;
-        case Brewer::TokenType_GlobalId:
-            str = "GlobalId";
-            break;
-        case Brewer::TokenType_LocalId:
-            str = "LocalId";
-            break;
-        case Brewer::TokenType_Meta:
-            str = "Meta";
-            break;
-        case Brewer::TokenType_Int:
-            str = "Int";
-            break;
-        case Brewer::TokenType_Float:
-            str = "Float";
-            break;
-        case Brewer::TokenType_String:
-            str = "String";
-            break;
-        case Brewer::TokenType_Other:
-            str = "Other";
-            break;
+            case Brewer::TokenType_Eof:
+                str = "Eof";
+                break;
+            case Brewer::TokenType_Id:
+                str = "Id";
+                break;
+            case Brewer::TokenType_GlobalId:
+                str = "GlobalId";
+                break;
+            case Brewer::TokenType_LocalId:
+                str = "LocalId";
+                break;
+            case Brewer::TokenType_Meta:
+                str = "Meta";
+                break;
+            case Brewer::TokenType_Int:
+                str = "Int";
+                break;
+            case Brewer::TokenType_Float:
+                str = "Float";
+                break;
+            case Brewer::TokenType_String:
+                str = "String";
+                break;
+            case Brewer::TokenType_Other:
+                str = "Other";
+                break;
         }
         return std::formatter<std::string>::format(str, ctx);
     }

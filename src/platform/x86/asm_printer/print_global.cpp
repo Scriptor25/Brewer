@@ -4,46 +4,47 @@
 #include <Brewer/Value/GlobalValue.hpp>
 #include <Brewer/Value/NamedValue.hpp>
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(Value* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(Value *value)
 {
-    if (const auto ptr = dynamic_cast<NamedValue*>(value))
+    if (const auto ptr = dynamic_cast<NamedValue *>(value))
         return PrintGlobal(ptr);
 
     Error("X86 - PrintGlobal(Value*) not implemented: {}", value);
 }
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(NamedValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(NamedValue *value)
 {
-    if (const auto ptr = dynamic_cast<GlobalValue*>(value))
+    if (const auto ptr = dynamic_cast<GlobalValue *>(value))
         return PrintGlobal(ptr);
-    if (const auto ptr = dynamic_cast<FunctionBlock*>(value))
+    if (const auto ptr = dynamic_cast<FunctionBlock *>(value))
         return PrintGlobal(ptr);
 
     Error("X86 - PrintGlobal(NamedValue*) not implemented: {}", value);
 }
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalValue* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalValue *value)
 {
-    if (const auto ptr = dynamic_cast<GlobalVariable*>(value))
+    if (const auto ptr = dynamic_cast<GlobalVariable *>(value))
         return PrintGlobal(ptr);
-    if (const auto ptr = dynamic_cast<GlobalFunction*>(value))
+    if (const auto ptr = dynamic_cast<GlobalFunction *>(value))
         return PrintGlobal(ptr);
 
     Error("X86 - PrintGlobal(GlobalValue*) not implemented: {}", value);
 }
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalVariable* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(const GlobalVariable *value)
 {
     S() << ".section .data" << std::endl;
     switch (value->GetLinkage())
     {
-    case GlobalValue::Linkage_Global:
-        S() << ".global " << value->GetName() << std::endl;
-        break;
-    case GlobalValue::Linkage_Weak:
-        S() << ".weak " << value->GetName() << std::endl;
-        break;
-    default: break;
+        case GlobalValue::Linkage_Global:
+            S() << ".global " << value->GetName() << std::endl;
+            break;
+        case GlobalValue::Linkage_Weak:
+            S() << ".weak " << value->GetName() << std::endl;
+            break;
+        default:
+            break;
     }
 
     if (!value->GetInit())
@@ -59,18 +60,19 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalVariable* value)
     S() << std::endl;
 }
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(const GlobalFunction *value)
 {
     S() << ".section .text" << std::endl;
     switch (value->GetLinkage())
     {
-    case GlobalValue::Linkage_Global:
-        S() << ".global " << value->GetName() << std::endl;
-        break;
-    case GlobalValue::Linkage_Weak:
-        S() << ".weak " << value->GetName() << std::endl;
-        break;
-    default: break;
+        case GlobalValue::Linkage_Global:
+            S() << ".global " << value->GetName() << std::endl;
+            break;
+        case GlobalValue::Linkage_Weak:
+            S() << ".weak " << value->GetName() << std::endl;
+            break;
+        default:
+            break;
     }
 
     if (value->IsEmpty())
@@ -106,8 +108,10 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
 #else
     conv = SYSTEM_V;
 #endif
-    if (value->GetMeta("ms_x64")) conv = MS_X64;
-    if (value->GetMeta("system_v")) conv = SYSTEM_V;
+    if (value->GetMeta("ms_x64"))
+        conv = MS_X64;
+    if (value->GetMeta("system_v"))
+        conv = SYSTEM_V;
 
     for (unsigned i = 0; i < value->GetNumArgs(); ++i)
     {
@@ -127,7 +131,7 @@ void Brewer::Platform::X86::ASMPrinter::PrintGlobal(GlobalFunction* value)
         PrintGlobal(value->GetBlock(i));
 }
 
-void Brewer::Platform::X86::ASMPrinter::PrintGlobal(FunctionBlock* value)
+void Brewer::Platform::X86::ASMPrinter::PrintGlobal(const FunctionBlock *value)
 {
     if (!value->GetName().empty())
         S() << ".L" << value->GetIndex() << ':' << std::endl;

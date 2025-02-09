@@ -7,42 +7,42 @@ namespace Brewer
     class NamedValue : public Value
     {
     public:
-        NamedValue(Type* type, std::string name, std::vector<std::string>&& meta);
+        NamedValue(Type *type, std::string name, std::vector<std::string> &&meta);
 
         [[nodiscard]] std::string GetName() const;
 
         [[nodiscard]] bool RequiresDestination() const override;
-        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
+        std::ostream &PrintOperandIR(std::ostream &os, bool omit_type) const override;
 
     private:
         std::string m_Name;
     };
 
-    class FunctionArg : public NamedValue
+    class FunctionArg final : public NamedValue
     {
     public:
-        FunctionArg(Type* type, std::string name, std::vector<std::string>&& meta);
+        FunctionArg(Type *type, std::string name, std::vector<std::string> &&meta);
     };
 
-    class FunctionBlock : public NamedValue
+    class FunctionBlock final : public NamedValue
     {
     public:
-        FunctionBlock(BlockType* type, std::string name, std::vector<std::string>&& meta);
+        FunctionBlock(BlockType *type, std::string name, std::vector<std::string> &&meta);
 
-        [[nodiscard]] Value* GetValue(unsigned i) const;
+        [[nodiscard]] Value *GetValue(unsigned i) const;
         [[nodiscard]] unsigned GetNumValues() const;
         [[nodiscard]] bool IsEmpty() const;
 
-        void Append(Value* value);
-        void Erase(Value* value);
+        void Append(Value *value);
+        void Erase(Value *value);
 
-        NamedValue* Get(Type* type, const std::string& name) const;
+        NamedValue *Get(Type *type, const std::string &name) const;
 
-        void Replace(Value* old_value, Value* new_value) override;
-        std::ostream& PrintIR(std::ostream& os) const override;
-        std::ostream& PrintOperandIR(std::ostream& os, bool omit_type) const override;
+        void Replace(Value *old_value, Value *new_value) override;
+        std::ostream &PrintIR(std::ostream &os) const override;
+        std::ostream &PrintOperandIR(std::ostream &os, bool omit_type) const override;
 
     private:
-        std::vector<Value*> m_Values;
+        std::vector<Value *> m_Values;
     };
 }

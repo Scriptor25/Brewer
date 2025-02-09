@@ -7,16 +7,16 @@ namespace Brewer
     class ASMPrinterBase
     {
     public:
-        explicit ASMPrinterBase(std::ostream& stream);
+        explicit ASMPrinterBase(std::ostream &stream);
         virtual ~ASMPrinterBase() = default;
 
-        virtual void Print(Module& module) = 0;
-        virtual void Print(Value* value) = 0;
+        virtual void Print(Module &module) = 0;
+        virtual void Print(Value *value) = 0;
 
     protected:
-        [[nodiscard]] std::ostream& S() const;
+        [[nodiscard]] std::ostream &S() const;
 
     private:
-        std::ostream& m_Stream;
+        std::ostream &m_Stream;
     };
 }

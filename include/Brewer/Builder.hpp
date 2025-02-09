@@ -7,9 +7,9 @@ namespace Brewer
     class Builder
     {
     public:
-        explicit Builder(Context& context);
+        explicit Builder(Context &context);
 
     private:
-        Context& m_Context;
+        Context &m_Context;
     };
 }

@@ -2,21 +2,22 @@
 #include <Brewer/Value/GlobalValue.hpp>
 
 Brewer::GlobalVariable::GlobalVariable(
-    Type* type,
+    Type *type,
     std::string name,
     const Linkage linkage,
-    Constant* init,
-    std::vector<std::string>&& meta)
-    : GlobalValue(type, std::move(name), linkage, std::move(meta)), m_Init(init)
+    Constant *init,
+    std::vector<std::string> &&meta)
+    : GlobalValue(type, std::move(name), linkage, std::move(meta)),
+      m_Init(init)
 {
 }
 
-Brewer::Constant* Brewer::GlobalVariable::GetInit() const
+Brewer::Constant *Brewer::GlobalVariable::GetInit() const
 {
     return m_Init;
 }
 
-std::ostream& Brewer::GlobalVariable::PrintIR(std::ostream& os) const
+std::ostream &Brewer::GlobalVariable::PrintIR(std::ostream &os) const
 {
     os << "var ";
     if (GetLinkage() != Linkage_Local)

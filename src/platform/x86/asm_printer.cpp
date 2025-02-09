@@ -3,36 +3,45 @@
 #include <Brewer/Platform/X86/ASMPrinter.hpp>
 #include <Brewer/Value/Value.hpp>
 
-bool Brewer::Platform::X86::ASMPrinter::Storage::Equal(const Storage& lhs, const Storage& rhs)
+bool Brewer::Platform::X86::ASMPrinter::Storage::Equal(const Storage &lhs, const Storage &rhs)
 {
-    if (!lhs || !rhs) return false;
-    if (lhs.Immediate != rhs.Immediate) return false;
-    if (lhs.Direct != rhs.Direct) return false;
+    if (!lhs || !rhs)
+        return false;
+    if (lhs.Immediate != rhs.Immediate)
+        return false;
+    if (lhs.Direct != rhs.Direct)
+        return false;
     if (lhs.Immediate)
         return lhs.Displacement == rhs.Displacement;
     if (lhs.Direct)
         return lhs.Base == rhs.Base;
     return lhs.Segment == rhs.Segment
-        && lhs.Displacement == rhs.Displacement
-        && lhs.Base == rhs.Base
-        && lhs.Index == rhs.Index
-        && lhs.Scale == rhs.Scale;
+           && lhs.Displacement == rhs.Displacement
+           && lhs.Base == rhs.Base
+           && lhs.Index == rhs.Index
+           && lhs.Scale == rhs.Scale;
 }
 
 Brewer::Platform::X86::ASMPrinter::Storage::Storage() = default;
 
 Brewer::Platform::X86::ASMPrinter::Storage::Storage(const int64_t value)
-    : Valid(true), Immediate(true), Displacement(value)
+    : Valid(true),
+      Immediate(true),
+      Displacement(value)
 {
 }
 
 Brewer::Platform::X86::ASMPrinter::Storage::Storage(const uint64_t value)
-    : Valid(true), Immediate(true), Displacement(static_cast<int64_t>(value))
+    : Valid(true),
+      Immediate(true),
+      Displacement(static_cast<int64_t>(value))
 {
 }
 
 Brewer::Platform::X86::ASMPrinter::Storage::Storage(const Register reg)
-    : Valid(true), Direct(true), Base(reg)
+    : Valid(true),
+      Direct(true),
+      Base(reg)
 {
 }
 
@@ -51,7 +60,7 @@ Brewer::Platform::X86::ASMPrinter::Storage::Storage(
 {
 }
 
-void Brewer::Platform::X86::ASMPrinter::Storage::Print(const ASMPrinter& printer, const unsigned bytes) const
+void Brewer::Platform::X86::ASMPrinter::Storage::Print(const ASMPrinter &printer, const unsigned bytes) const
 {
     if (!Valid)
     {
@@ -69,10 +78,13 @@ void Brewer::Platform::X86::ASMPrinter::Storage::Print(const ASMPrinter& printer
         return;
     }
 
-    if (Segment) printer.S() << Segment << ':';
-    if (Displacement) printer.S() << Displacement;
+    if (Segment)
+        printer.S() << Segment << ':';
+    if (Displacement)
+        printer.S() << Displacement;
     printer.S() << '(';
-    if (Base) printer.S() << '%' << ToString(Base, 8);
+    if (Base)
+        printer.S() << '%' << ToString(Base, 8);
     if (!Index)
     {
         printer.S() << ')';
@@ -122,63 +134,67 @@ std::string Brewer::Platform::X86::ASMPrinter::ToString(const Register reg, cons
 
     if (gp_regs.contains(reg))
     {
-        std::string res = gp_regs[reg];
+        auto res = gp_regs[reg];
         switch (bytes)
         {
-        case 0:
-            res = res + 'h';
-            break;
-        case 1:
-            res = res + 'l';
-            break;
-        case 2:
-            res = res + 'x';
-            break;
-        case 4:
-            res = 'e' + res + 'x';
-            break;
-        case 8:
-            res = 'r' + res + 'x';
-            break;
-        default: break;
+            case 0:
+                res = res + 'h';
+                break;
+            case 1:
+                res = res + 'l';
+                break;
+            case 2:
+                res = res + 'x';
+                break;
+            case 4:
+                res = 'e' + res + 'x';
+                break;
+            case 8:
+                res = 'r' + res + 'x';
+                break;
+            default:
+                break;
         }
         return res;
     }
     if (sp_regs.contains(reg))
     {
-        std::string res = sp_regs[reg];
+        auto res = sp_regs[reg];
         switch (bytes)
         {
-        case 0:
-        case 1:
-            res = res + 'l';
-            break;
-        case 2: break;
-        case 4:
-            res = 'e' + res;
-            break;
-        case 8:
-            res = 'r' + res;
-            break;
-        default: break;
+            case 0:
+            case 1:
+                res = res + 'l';
+                break;
+            case 2:
+                break;
+            case 4:
+                res = 'e' + res;
+                break;
+            case 8:
+                res = 'r' + res;
+                break;
+            default:
+                break;
         }
         return res;
     }
 
-    std::string res = ex_regs[reg];
+    auto res = ex_regs[reg];
     switch (bytes)
     {
-    case 0:
-    case 1:
-        res += 'b';
-        break;
-    case 2:
-        res += 'w';
-        break;
-    case 4:
-        res += 'd';
-        break;
-    default: break;
+        case 0:
+        case 1:
+            res += 'b';
+            break;
+        case 2:
+            res += 'w';
+            break;
+        case 4:
+            res += 'd';
+            break;
+        default:
+            break;
     }
     return res;
 }
@@ -192,8 +208,10 @@ Brewer::Platform::X86::ASMPrinter::Register Brewer::Platform::X86::ASMPrinter::G
 
     switch (conv)
     {
-    case MS_X64: return ms_x64[i];
-    case SYSTEM_V: return system_v[i];
+        case MS_X64:
+            return ms_x64[i];
+        case SYSTEM_V:
+            return system_v[i];
     }
 
     Error("X86 - GetCallRegister({}, {})", static_cast<unsigned>(conv), i);
@@ -203,30 +221,33 @@ unsigned Brewer::Platform::X86::ASMPrinter::GetNumCallRegisters(const CallConv c
 {
     switch (conv)
     {
-    case MS_X64: return 4;
-    case SYSTEM_V: return 6;
+        case MS_X64:
+            return 4;
+        case SYSTEM_V:
+            return 6;
     }
 
     Error("X86 - GetNumCallRegisters({})", static_cast<unsigned>(conv));
 }
 
-Brewer::Platform::X86::ASMPrinter::ASMPrinter(std::ostream& stream)
+Brewer::Platform::X86::ASMPrinter::ASMPrinter(std::ostream &stream)
     : ASMPrinterBase(stream)
 {
 }
 
-void Brewer::Platform::X86::ASMPrinter::Print(Module& module)
+void Brewer::Platform::X86::ASMPrinter::Print(Module &module)
 {
     S() << ".file \"" << module.GetFilename() << '"' << std::endl;
     S() << ".ident \"Brewer\"" << std::endl;
-    module.ForEach([&](GlobalValue* value)
-    {
-        S() << std::endl;
-        PrintGlobal(value);
-    });
+    module.ForEach(
+        [&](GlobalValue *value)
+        {
+            S() << std::endl;
+            PrintGlobal(value);
+        });
 }
 
-void Brewer::Platform::X86::ASMPrinter::Print(Value* value)
+void Brewer::Platform::X86::ASMPrinter::Print(Value *value)
 {
     return Print(value, {});
 }
@@ -239,7 +260,7 @@ void Brewer::Platform::X86::ASMPrinter::BeginFrame()
     m_TopOffset = 0;
 }
 
-int64_t Brewer::Platform::X86::ASMPrinter::GetOffset(Value* value)
+int64_t Brewer::Platform::X86::ASMPrinter::GetOffset(Value *value)
 {
     if (m_Offsets.contains(value))
         return m_Offsets[value];
